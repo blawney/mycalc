@@ -32,6 +32,22 @@ class InvalidSymbolName(Exception):
     pass
 
 
+class MalformattedReactionFileException(Exception):
+    pass
+
+
+class MissingInitialConditionsException(Exception):
+    pass
+
+
+class InvalidSimulationTimeException(Exception):
+    pass
+
+
+class InitialConditionGivenForMissingElement(Exception):
+    pass
+
+
 class Model(object):
     """
     Model should hold a ReactionParser object (abstract the handling of the source of reaction definitions
@@ -44,11 +60,27 @@ class Model(object):
 
     def setup(self):
         self._reactions = self._reaction_factory.get_reactions()
-        for r in self._reactions:
-            print r
+        self._initial_conditions = self._reaction_factory.get_initial_conditions()
+        self._simulation_time = self._reaction_factory.get_simulation_time()
+        self.check_validity()
+
+    def check_validity(self):
+        # check that initial conditions are specified for species that are given in the equations
+        all_symbols = set()
+        for rx in self._reactions:
+            all_symbols = all_symbols.union(set(rx.get_all_elements()))
+        for symbol in self._initial_conditions.keys():
+            if symbol not in all_symbols:
+                raise InitialConditionGivenForMissingElement('Symbol %s was not in your equations.' % symbol)
 
     def get_reactions(self):
         return self._reactions
+
+    def get_initial_conditions(self):
+        return self._initial_conditions
+
+    def get_simulation_time(self):
+        return self._simulation_time
 
 
 class ReactionFactory(object):
@@ -59,28 +91,84 @@ class ReactionFactory(object):
 
 class FileReactionFactory(ReactionFactory):
 
+    REACTION_DELIMITER = '#REACTIONS'
+    IC_DELIMITER = '#INITIAL_CONDITIONS'
+    TIME_DELIMITER = '#TIME'
+
     def __init__(self, filepath):
         self.expression_parser = StringExpressionParser
         if os.path.isfile(filepath):
             self.reaction_file = filepath
+            self.read_source()
         else:
             raise FileSourceNotFound('File could not be found at %s' % filepath)
 
     def read_source(self):
-        reaction_expressions = []
-        with open(self.reaction_file, 'r') as fin:
-            reaction_expressions.append(fin.readline())
-        return reaction_expressions
+        contents = open(self.reaction_file).read()
+
+        # parse out the reactions:
+        reaction_section_pattern = '(?:%s)(.*)(?:%s)' % ((FileReactionFactory.REACTION_DELIMITER,)*2)
+        m = re.search(reaction_section_pattern, contents, flags=re.DOTALL)
+        if m:
+            eqn_list = [x.strip() for x in m.group(1).strip().split('\n')]
+            reactions = []
+            for eqn in eqn_list:
+                if len(eqn) > 0:
+                    reactions.append(self.create_reaction(eqn))
+            if len(reactions) == 0:
+                raise MalformattedReactionFileException('Could not parse any reactions from the input file.')
+            self.reaction_list = reactions
+        else:
+            raise MalformattedReactionFileException('Could not parse any reactions from the file. Check that.')
+
+        # parse out the initial conditions:
+        ic_section_pattern = '(?:%s)(.*)(?:%s)' % ((FileReactionFactory.IC_DELIMITER,)*2)
+        m = re.search(ic_section_pattern, contents, flags=re.DOTALL)
+        if m:
+            ic_list = [x.strip() for x in m.group(1).strip().split('\n')]
+            initial_conditions = {}
+            for ic in ic_list:
+                if len(ic) > 0:
+                    try:
+                        symbol, c0 = [x.strip() for x in ic.split('=')]
+                        initial_conditions[symbol] = float(c0)
+                    except ValueError as ex:
+                        raise MalformattedReactionFileException("""
+                            The initial condition for symbol %s is not valid""" %  symbol)
+            if len(initial_conditions.keys()) > 0:
+                self._initial_conditions = initial_conditions
+            else:
+                raise MissingInitialConditionsException("""
+                    Could not parse any initial conditions from the file. Check that.""")
+        else:
+            raise MissingInitialConditionsException("""
+                    Could not parse any initial conditions from the file. Check that.""")
+
+        # parse out the simulation time length (optional parameter)
+        time_section_pattern = '(?:%s)(.*)(?:%s)' % ((FileReactionFactory.TIME_DELIMITER,)*2)
+        m = re.search(time_section_pattern, contents, flags=re.DOTALL)
+        if m:
+            try:
+                self._simulation_time = float(m.group(1).strip())
+            except ValueError:
+                raise InvalidSimulationTimeException('The simulation time was not a valid number.')
+        else:
+            self._simulation_time = 15.0
+            #TODO: parameterize this above.
+
 
     def create_reaction(self, reaction_expression):
         reactants, products, fwd_k, rev_k = self.expression_parser.parse(reaction_expression)
         return Reaction(reactants, products, fwd_k, rev_k)
 
     def get_reactions(self):
-        reactions = []
-        for reaction_expression in open(self.reaction_file, 'r'):
-            reactions.append(self.create_reaction(reaction_expression))
-        return reactions
+        return self.reaction_list
+
+    def get_initial_conditions(self):
+        return self._initial_conditions
+
+    def get_simulation_time(self):
+        return self._simulation_time
 
 
 class ExpressionParser(object):

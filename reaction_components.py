@@ -38,12 +38,12 @@ class Reaction(object):
         return element_set
 
     def __str__(self):
-        reactant_str = '+'.join([' %s ' %x for x in self.reactant_list])
-        product_str = '+'.join([' %s ' %x for x in self.product_list])
-        if self.rev_k:
-            return '%s <--%s, %s--> %s' % (reactant_str, self.fwd_k, self.rev_k, product_str)
+        reactant_str = '+'.join([' %s ' %x for x in self._reactant_list])
+        product_str = '+'.join([' %s ' %x for x in self._product_list])
+        if self._rev_k:
+            return '%s <--%s, %s--> %s' % (reactant_str, self._fwd_k, self._rev_k, product_str)
         else:
-            return '%s --%s--> %s' % (reactant_str, self.fwd_k, product_str)
+            return '%s --%s--> %s' % (reactant_str, self._fwd_k, product_str)
 
 
 class ReactionElement(object):

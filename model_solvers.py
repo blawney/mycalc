@@ -13,7 +13,21 @@ class ODESolver(Solver):
     def __init__(self, model):
         self.model = model
         self.create_species_mapping()
+        self.create_stoichiometry_matrix()
         self.rate_funcs = self.calculate_rate_law_funcs(self.model.get_reactions())
+        self.setup_initial_conditions()
+
+    def setup_initial_conditions(self):
+        ic_from_model = self.model.get_initial_conditions()
+        initial_conditions = np.zeros(len(self.species_mapping.keys()))
+        for symbol, index in self.species_mapping.items():
+            # species_mapping maps the symbol to the index of the concentration array
+            if symbol in ic_from_model:
+                initial_conditions[index] = ic_from_model[symbol]
+            else:
+                initial_conditions[index] = 0.0
+        self.initial_conditions = initial_conditions
+
 
     def create_species_mapping(self):
         species_set = set()
@@ -73,9 +87,11 @@ class ODESolver(Solver):
         rate_vals = np.array([f(X) for f in self.rate_funcs])
         return np.dot(self.N, rate_vals)
 
-    def equilibrium_solution(self, initial_conditions):
-        t = np.linspace(0, 25, 100000)
-        X = integrate.odeint(self.dX_dt, initial_conditions, t)
+    def equilibrium_solution(self):
+        tmax = self.model.get_simulation_time()
+        t = np.linspace(0, tmax, 100000)
+        X = integrate.odeint(self.dX_dt, self.initial_conditions, t)
+        print self.species_mapping
         return X[-1,:]
 
 

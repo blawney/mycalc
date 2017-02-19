@@ -21,13 +21,19 @@ class MockedModel(object):
     for convenience here.
     """
     def __init__(self):
-        pass
+        self.initial_condition = {}
 
     def add_reactions(self, reaction_list):
         self.reactions = reaction_list
 
     def get_reactions(self):
         return self.reactions
+
+    def set_initial_condition(self, ic):
+        self.initial_condition = ic
+
+    def get_initial_conditions(self):
+        return self.initial_condition
 
 
 class TestODESolver(unittest.TestCase):
@@ -155,3 +161,54 @@ class TestODESolver(unittest.TestCase):
         expected_result[:,3] = np.array([0,0,3,1,-1])
 
         npt.assert_allclose(result_mtx, expected_result)
+
+    def test_initial_conditions_init_to_zero_if_none_specified(self):
+        # equation1: 2*A + B <-> C
+        rx1 = Reaction(
+            [Reactant('A',2), Reactant('B',1)],
+            [Product('C',1)],
+            0.2,
+            0.5
+        )
+        # equation2: 3*C + D -> E
+        rx2 = Reaction(
+            [Reactant('C', 3), Reactant('D',1)],
+            [Product('E', 1)],
+            5,
+            0.0
+        )
+        reactions = [rx1, rx2]
+
+        # to create the ODESolver, we need to pass it a Model instance.  For our purposes here, the Model instance
+        # needs to have a get_reactions method which returns a list of Reaction instances
+        m = MockedModel()
+        m.add_reactions(reactions)
+        solver = model_solvers.ODESolver(m)
+        ic = solver.initial_conditions
+        npt.assert_allclose(ic, np.zeros(5))
+
+    def test_initial_conditions_setting(self):
+        # equation1: 2*A + B <-> C
+        rx1 = Reaction(
+            [Reactant('A',2), Reactant('B',1)],
+            [Product('C',1)],
+            0.2,
+            0.5
+        )
+        # equation2: 3*C + D -> E
+        rx2 = Reaction(
+            [Reactant('C', 3), Reactant('D',1)],
+            [Product('E', 1)],
+            5,
+            0.0
+        )
+        reactions = [rx1, rx2]
+
+        # to create the ODESolver, we need to pass it a Model instance.  For our purposes here, the Model instance
+        # needs to have a get_reactions method which returns a list of Reaction instances
+        m = MockedModel()
+        m.add_reactions(reactions)
+        m.set_initial_condition({'A':1.2, 'C':0.2})
+        solver = model_solvers.ODESolver(m)
+        ic = solver.initial_conditions
+        npt.assert_allclose(ic, np.array([1.2,0,0.2,0,0]))

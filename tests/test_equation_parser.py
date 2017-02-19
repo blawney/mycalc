@@ -5,6 +5,7 @@ import os
 sys.path.append( os.path.dirname( os.path.dirname( os.path.abspath(__file__) ) ) )
 
 import utils
+from reaction_components import Reactant, Product
 import unittest
 
 class TestStringExpressionParser(unittest.TestCase):
@@ -77,6 +78,14 @@ class TestStringExpressionParser(unittest.TestCase):
         for r in reactants:
             if r.symbol == 'A':
                 self.assertEqual(r.coefficient, 6)
+
+    def test_single_reactant_equation(self):
+        eqn = 'T <-> Tf,0.5,0.5'
+        reactants, products, fwd_k, rev_k = utils.StringExpressionParser.parse(eqn)
+        self.assertEquals(len(reactants),1)
+        self.assertEqual(reactants[0], Reactant('T',1))
+        self.assertEqual(len(products),1)
+        self.assertEqual(products[0], Product('Tf',1))
 
 if __name__ == '__main__':
     unittest.main()
