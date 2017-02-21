@@ -21,6 +21,11 @@ class TestStringExpressionParser(unittest.TestCase):
         with self.assertRaises(utils.MalformattedReactionDirectionSymbolException):
             utils.StringExpressionParser.parse(bad_eqn)
 
+    def test_unidirectional_with_two_rate_constants_raises_exception(self):
+        bad_eqn = 'A + B -> C,0.2,0.3'
+        with self.assertRaises(utils.ExtraRateConstantException):
+            utils.StringExpressionParser.parse(bad_eqn)
+
     # some tests related to the rate constants- missing, non-float
     def test_missing_reverse_rate_constant_for_bidirectional_reaction(self):
         bad_eqn = 'A + B <-> C,0.2'
@@ -74,14 +79,14 @@ class TestStringExpressionParser(unittest.TestCase):
 
     def test_adds_repeated_symbol_coefficients(self):
         eqn = 'A + 2*A + B + 3*A <-> C,0.1,0.1'
-        reactants, products, fwd_k, rev_k = utils.StringExpressionParser.parse(eqn)
+        reactants, products, fwd_k, rev_k, is_bidirectional = utils.StringExpressionParser.parse(eqn)
         for r in reactants:
             if r.symbol == 'A':
                 self.assertEqual(r.coefficient, 6)
 
     def test_single_reactant_equation(self):
         eqn = 'T <-> Tf,0.5,0.5'
-        reactants, products, fwd_k, rev_k = utils.StringExpressionParser.parse(eqn)
+        reactants, products, fwd_k, rev_k, is_bidirectional = utils.StringExpressionParser.parse(eqn)
         self.assertEquals(len(reactants),1)
         self.assertEqual(reactants[0], Reactant('T',1))
         self.assertEqual(len(products),1)

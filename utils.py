@@ -20,6 +20,10 @@ class RateConstantFormatException(Exception):
     pass
 
 
+class ExtraRateConstantException(Exception):
+    pass
+
+
 class MalformattedReactionDirectionSymbolException(Exception):
     pass
 
@@ -158,8 +162,8 @@ class FileReactionFactory(ReactionFactory):
 
 
     def create_reaction(self, reaction_expression):
-        reactants, products, fwd_k, rev_k = self.expression_parser.parse(reaction_expression)
-        return Reaction(reactants, products, fwd_k, rev_k)
+        reactants, products, fwd_k, rev_k, is_bidirectional = self.expression_parser.parse(reaction_expression)
+        return Reaction(reactants, products, fwd_k, rev_k, is_bidirectional)
 
     def get_reactions(self):
         return self.reaction_list
@@ -303,10 +307,17 @@ class StringExpressionParser(ExpressionParser):
                 fwd_k = float(contents[1])
             except ValueError as ex:
                     raise RateConstantFormatException('Could not parse the rate constants: %s' % ex.message)
+            if len(contents) > 2:
+                # in this case, the rate constant was specified for a reverse reaction, but the arrow was only one
+                # direction.  This could be a common mistake, so raise an exception
+                raise ExtraRateConstantException(
+                    """ A rate constant for the reverse reaction was specified.
+                    However, the reaction was specified as occurring in a single direction.
+                    Please check this.""")
             rev_k = 0.0
 
         reactants, products = cls._parse_equation(equation)
 
-        return reactants, products, fwd_k, rev_k
+        return reactants, products, fwd_k, rev_k, is_bidirectional
 
 

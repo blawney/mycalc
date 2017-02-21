@@ -6,12 +6,14 @@ class Reaction(object):
                  reactants,
                  products,
                  fwd_k,
-                 rev_k=None):
+                 rev_k=None,
+                 is_bidirectional=False):
 
         self._reactant_list = reactants
         self._product_list = products
         self._fwd_k = fwd_k
         self._rev_k = rev_k
+        self.is_bidirectional = is_bidirectional
 
     def get_reactants(self):
         return self._reactant_list
@@ -25,6 +27,9 @@ class Reaction(object):
     def get_rev_k(self):
         return self._rev_k
 
+    def is_bidirectional_reaction(self):
+        return self.is_bidirectional
+
     def get_all_elements(self):
         """
         A set of the symbols (Strings)
@@ -36,6 +41,12 @@ class Reaction(object):
         for r in self._product_list:
             element_set.add(r.symbol)
         return element_set
+
+    def reactant_str(self):
+        return '+'.join([' %s ' %x for x in self._reactant_list])
+
+    def product_str(self):
+        return '+'.join([' %s ' %x for x in self._product_list])
 
     def __str__(self):
         reactant_str = '+'.join([' %s ' %x for x in self._reactant_list])
