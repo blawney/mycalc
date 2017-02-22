@@ -57,9 +57,6 @@ class AutoScrollable(Frame):
         self.frame.bind('<Configure>', frame_changed)
         self.canvas.bind('<Enter>', self._bound_to_mousewheel)
         self.canvas.bind('<Leave>', self._unbound_to_mousewheel)
-        #self.frame.bind_all("<MouseWheel>", self._on_mousewheel)
-        #self.frame.bind_all("<Button-4>", self._on_mousewheel)
-        #self.frame.bind_all("<Button-5>", self._on_mousewheel)
 
     def _bound_to_mousewheel(self, event):
         self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)   
@@ -70,7 +67,6 @@ class AutoScrollable(Frame):
         self.canvas.unbind_all("<MouseWheel>")
         self.canvas.unbind_all("<Button-4>") 
         self.canvas.unbind_all("<Button-5>")  
-
 
     def _on_mousewheel(self, event):
         direction =-1 

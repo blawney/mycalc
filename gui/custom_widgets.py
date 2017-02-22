@@ -1,5 +1,8 @@
 __author__ = 'brian'
 
+from Tkinter import *
+import ttk
+
 class ReactionEntryPanel(ttk.Frame):
     def __init__(self, parent, controller=None, reaction_obj = None):
         ttk.Frame.__init__(self, parent)
@@ -10,6 +13,7 @@ class ReactionEntryPanel(ttk.Frame):
         self.ka = DoubleVar()
         self.kd = DoubleVar()
         self.direction_symbol = StringVar()
+        self.is_bidirectional = True
 
         if reaction_obj:
             self.reactants.set(reaction_obj.reactant_str())
@@ -36,5 +40,19 @@ class ReactionEntryPanel(ttk.Frame):
         self.kd_entry.grid(row=0, column=4, padx=10)
         self.grid_rowconfigure(0, weight=1)
 
+
+        self.direction_symbol_entry.bind("<<ComboboxSelected>>", self.on_direction_change)
+
         for child in self.winfo_children():
             child.grid_configure(padx=5, pady=5)
+
+    def on_direction_change(self, *args):
+        print 'event fired!'
+        if self.direction_symbol.get().startswith('<'):
+            self.is_bidirectional = True
+            self.kd.set(0.0)
+            self.kd_entry.state(['!disabled'])
+        else:
+            self.is_bidirectional = False
+            self.kd.set(0.0)
+            self.kd_entry.state(['disabled'])
