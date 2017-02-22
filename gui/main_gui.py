@@ -21,11 +21,42 @@ def load_model_from_file(f):
     return reactions
 
 
-class ModelSetupFrame(ttk.Frame):
-    
-    def __init__(self,parent, controller=None,):
+class InitialConditionsFrame(ttk.Frame):
+    def __init__(self, parent, controller=None, order_index=0):
         ttk.Frame.__init__(self, parent)
         self.controller = controller
+        self.order_index = order_index
+        dl = ttk.Label(self, text="Initial conditions")
+        dl.grid(row=0, column=0)
+        self.next_button = ttk.Button(self, text='Next')
+        self.next_button['command'] = lambda: self.controller.show_frame(self.order_index + 1)
+        self.next_button.grid(column=0, row=1, sticky=(N,E), pady=10)
+
+        self.previous_button = ttk.Button(self, text='Previous')
+        self.previous_button['command'] = lambda: self.controller.show_frame(self.order_index - 1)
+        self.previous_button.grid(column=0, row=2, sticky=(N,E), pady=10)
+
+
+class CalculatorResultFrame(ttk.Frame):
+
+    def __init__(self, parent, controller=None, order_index=0):
+        ttk.Frame.__init__(self, parent)
+        self.controller = controller
+        self.order_index = order_index
+        dl = ttk.Label(self, text="results")
+        dl.grid(row=0, column=0)
+
+        self.previous_button = ttk.Button(self, text='Previous')
+        self.previous_button['command'] = lambda: self.controller.show_frame(self.order_index - 1)
+        self.previous_button.grid(column=0, row=1, sticky=(N,E), pady=10)
+
+
+class ModelSetupFrame(ttk.Frame):
+    
+    def __init__(self,parent, controller=None, order_index=0):
+        ttk.Frame.__init__(self, parent)
+        self.controller = controller
+        self.order_index = order_index
         
         # add a paned window for building/loading and viewing current model:
         pf = ttk.Panedwindow(self, orient=HORIZONTAL)
@@ -100,6 +131,7 @@ class ModelSetupFrame(ttk.Frame):
 
         # a button for moving to the next step in the workflow.  Initially disabled, until the model is loaded
         self.next_button = ttk.Button(right_panel, text='Next')
+        self.next_button['command'] = lambda: self.controller.show_frame(self.order_index + 1)
         self.next_button.grid(column=0, row=1, sticky=(N,E), pady=10)
         self.next_button.state(['disabled'])
 
@@ -202,13 +234,39 @@ class ModelSetupFrame(ttk.Frame):
                 error_msg.grid(column=0, row=0)
 
 
+class AppMain(Tk):
+
+    def __init__(self, *args, **kwargs):
+        Tk.__init__(self, *args, **kwargs)
+
+        main_container = ttk.Frame(self)
+        main_container.grid(row=0, column=0, sticky=(N,S,E,W))
+        main_container.grid_columnconfigure(0, weight=1)
+        main_container.grid_rowconfigure(0, weight=1)
+
+        # now, we will add frames into the main_container
+        self.frames = {}
+        for i, F in enumerate([ModelSetupFrame, InitialConditionsFrame, CalculatorResultFrame]):
+            frame = F(parent=main_container, controller=self, order_index=i)
+            self.frames[i] =  frame
+            frame.grid(row=0, column=0, sticky=(N,S,E,W))
+
+        self.current_frame = 0
+        self.show_frame(0)
+
+    def show_frame(self, idx):
+        frame = self.frames[idx]
+        frame.tkraise()
+        self.current_frame = idx
+
 def gui_main():
 
-    root = Tk()
+    #root = Tk()
+    root = AppMain()
     root.title("True T")
 
-    model_setup_frame = ModelSetupFrame(root)
-    model_setup_frame.grid(column=0, row=0, sticky=(N, W, E, S))
+    #model_setup_frame = ModelSetupFrame(root)
+    #model_setup_frame.grid(column=0, row=0, sticky=(N, W, E, S))
 
     # if the window is resized, change the size to follow:
     root.grid_columnconfigure(0, weight=1)
