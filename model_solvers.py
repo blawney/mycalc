@@ -91,7 +91,6 @@ class ODESolver(Solver):
         tmax = self.model.get_simulation_time()
         t = np.linspace(0, tmax, 100000)
         X = integrate.odeint(self.dX_dt, self.initial_conditions, t)
-        print self.species_mapping
-        return X[-1,:]
+        return self.species_mapping, X
 
 

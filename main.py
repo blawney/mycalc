@@ -10,4 +10,4 @@ if __name__ == '__main__':
     model = utils.Model(factory)
     solver = model_solvers.ODESolver(model)
     solution = solver.equilibrium_solution()
-    print solution
+    print solution[-1,:]
