@@ -56,3 +56,17 @@ class ReactionEntryPanel(ttk.Frame):
             self.is_bidirectional = False
             self.kd.set(0.0)
             self.kd_entry.state(['disabled'])
+
+
+class InitialConditionEntryPanel(ttk.Frame):
+
+    def __init__(self, parent, species, ic, length=25):
+        ttk.Frame.__init__(self, parent)
+
+        label = ttk.Label(self, text=species, anchor=W, width=length)
+        label.grid(column=0, row=0, sticky=W, padx=10, pady=10)
+
+        self.ic = DoubleVar()
+        self.ic.set(ic)
+        ic_entry = ttk.Entry(self, textvariable=self.ic)
+        ic_entry.grid(row=0, column=1, sticky=W, padx=10, pady=10)

@@ -52,6 +52,12 @@ class InitialConditionGivenForMissingElement(Exception):
     pass
 
 
+class ReactionErrorWithTrackerException(Exception):
+    def __init__(self, error_index, detailed_message):
+        self.error_index = error_index
+        self.detailed_message = detailed_message
+
+
 class Model(object):
     """
     Model should hold a ReactionParser object (abstract the handling of the source of reaction definitions
@@ -64,18 +70,48 @@ class Model(object):
 
     def setup(self):
         self._reactions = self._reaction_factory.get_reactions()
-        self._initial_conditions = self._reaction_factory.get_initial_conditions()
-        self._simulation_time = self._reaction_factory.get_simulation_time()
+        self.determine_all_elements()
+        ic = self._reaction_factory.get_initial_conditions()
+        if ic:
+            self._initial_conditions = ic
+        else:
+            self._initial_conditions = dict(zip(self.all_elements, [0.0]*len(self.all_elements)))
+        sim_time = self._reaction_factory.get_simulation_time()
+        if sim_time:
+            self._simulation_time = sim_time
+        else:
+            self._simulation_time = 0.0
         self.check_validity()
 
     def check_validity(self):
         # check that initial conditions are specified for species that are given in the equations
+        if self._initial_conditions:
+            for symbol in self._initial_conditions.keys():
+                if symbol not in self.all_elements:
+                    raise InitialConditionGivenForMissingElement('Symbol %s was not in your equations.' % symbol)
+
+    def determine_all_elements(self):
         all_symbols = set()
         for rx in self._reactions:
             all_symbols = all_symbols.union(set(rx.get_all_elements()))
-        for symbol in self._initial_conditions.keys():
-            if symbol not in all_symbols:
-                raise InitialConditionGivenForMissingElement('Symbol %s was not in your equations.' % symbol)
+        self.all_elements = all_symbols
+
+    def set_initial_conditions(self, ic):
+        self._initial_conditions = ic
+        self.check_validity()
+
+    def set_simulation_time(self, t):
+        try:
+            t = float(t)
+            if t > 0:
+                self._simulation_time = t
+            else:
+                raise InvalidSimulationTimeException('Simulation time must be a positive number')
+        except ValueError:
+            raise InvalidSimulationTimeException('Could not interpret the simulation time as a number.')
+
+    def get_all_elements(self):
+        return self.all_elements
 
     def get_reactions(self):
         return self._reactions
@@ -86,11 +122,47 @@ class Model(object):
     def get_simulation_time(self):
         return self._simulation_time
 
+    def __str__(self):
+        s = ''
+        for rx in self._reactions:
+            s += '%s\n' % rx
+        s += 'Initial conditions: %s' % self._initial_conditions
+        s += '\n%s' % self._simulation_time
+        return s
+
 
 class ReactionFactory(object):
 
     def get_reactions(self):
         raise NotImplementedError
+
+
+class GUIReactionFactory(ReactionFactory):
+
+    def __init__(self, reaction_strings_dict):
+        self.expression_parser = StringExpressionParser
+        self.reaction_strings_dict = reaction_strings_dict
+        reactions = []
+        for idx, rx in self.reaction_strings_dict.items():
+            try:
+                reactions.append(self.create_reaction(rx))
+            except Exception as ex:
+                raise ReactionErrorWithTrackerException(idx, ex.message)
+        self.reaction_list = reactions
+
+    def create_reaction(self, reaction_expression):
+        reactants, products, fwd_k, rev_k, is_bidirectional = self.expression_parser.parse(reaction_expression)
+        return Reaction(reactants, products, fwd_k, rev_k, is_bidirectional)
+
+    def get_reactions(self):
+        return self.reaction_list
+
+    def get_initial_conditions(self):
+        return None
+
+    def get_simulation_time(self):
+        return None
+
 
 
 class FileReactionFactory(ReactionFactory):
@@ -153,7 +225,11 @@ class FileReactionFactory(ReactionFactory):
         m = re.search(time_section_pattern, contents, flags=re.DOTALL)
         if m:
             try:
-                self._simulation_time = float(m.group(1).strip())
+                t = float(m.group(1).strip())
+                if t > 0:
+                    self._simulation_time = t
+                else:
+                    raise InvalidSimulationTimeException('The simulation time must be a positive number.')
             except ValueError:
                 raise InvalidSimulationTimeException('The simulation time was not a valid number.')
         else:
@@ -169,6 +245,7 @@ class FileReactionFactory(ReactionFactory):
         return self.reaction_list
 
     def get_initial_conditions(self):
+        print 'calling for ICs'
         return self._initial_conditions
 
     def get_simulation_time(self):
@@ -258,7 +335,7 @@ class StringExpressionParser(ExpressionParser):
 
             else:
                 raise MalformattedReactionException("""
-                        Equation %s was not formatted correctly""" % equation)
+                        Equation (%s) was not formatted correctly""" % equation)
         except ValueError:
             raise MalformattedReactionException("""
                         Could not parse a left and right-hand side.

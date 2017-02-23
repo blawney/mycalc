@@ -2,7 +2,7 @@ __author__ = 'brian'
 
 from Tkinter import *
 import ttk
-from tkFileDialog   import askopenfilename
+from tkFileDialog import askopenfilename
 from autoscrollbar import AutoScrollable
 import glob
 import os
@@ -13,28 +13,60 @@ import utils
 import custom_widgets
 
 
-def load_model_from_file(f):
-    print 'load from %s' % f
-    factory = utils.FileReactionFactory(f)
-    model = utils.Model(factory)
-    reactions = model.get_reactions()
-    return reactions
-
-
 class InitialConditionsFrame(ttk.Frame):
+    #TODO: figure out how to update this when
     def __init__(self, parent, controller=None, order_index=0):
         ttk.Frame.__init__(self, parent)
         self.controller = controller
         self.order_index = order_index
-        dl = ttk.Label(self, text="Initial conditions")
-        dl.grid(row=0, column=0)
-        self.next_button = ttk.Button(self, text='Next')
+
+    def prep(self):
+
+        self.model = self.controller.get_model()
+
+        reaction_summary_title = ttk.Label(self, text="Reaction summary", anchor=W)
+        reaction_summary_title.grid(row=0, column=0, sticky=W)
+        reaction_summary_frame = ttk.Frame(self)
+        reaction_summary_frame.grid(column=0, row=1, padx=(10,100), sticky=(N,W))
+        for i, reaction in enumerate(self.model.get_reactions()):
+            label = ttk.Label(reaction_summary_frame, text=reaction, anchor=W)
+            label.grid(column=0, row=i, pady=10, sticky=W)
+
+
+        dl = ttk.Label(self, text="Initial conditions (Molar concentration)", anchor=W)
+        dl.grid(row=0, column=1, sticky=W)
+        ic_entry_frame = ttk.Frame(self)
+        ic_entry_frame.grid(row=1, column=1, padx=(20, 300))
+        initial_conditions = self.model.get_initial_conditions()
+        all_symbols = self.model.get_all_elements()
+        longest_symbol = max([len(x) for x in all_symbols])
+        for i, s in enumerate(all_symbols):
+            if s in initial_conditions:
+                ic_entry_widget = custom_widgets.InitialConditionEntryPanel(ic_entry_frame, s, initial_conditions[s], length=longest_symbol)
+            else:
+                ic_entry_widget = custom_widgets.InitialConditionEntryPanel(ic_entry_frame, s, 0.0, length=longest_symbol)
+            ic_entry_widget.grid(row=i, column=1)
+
+        time_label = ttk.Label(self, text='Simulation time (seconds)', anchor=E)
+        time_label.grid(column=2, row=0, sticky=E, padx=10, pady=10)
+        time_entry_frame = ttk.Frame(self)
+        time_entry_frame.grid(row=1, column=2, sticky=(N,E), padx=(80,5))
+
+        self.sim_time = DoubleVar()
+        self.sim_time.set(self.model.get_simulation_time())
+        time_entry = ttk.Entry(time_entry_frame, textvariable=self.sim_time, width=4)
+        time_entry.grid(row=0, column=0, sticky=(N,E), padx=10, pady=10)
+
+        self.next_button = Button(self, text='Next', anchor=E)
         self.next_button['command'] = lambda: self.controller.show_frame(self.order_index + 1)
-        self.next_button.grid(column=0, row=1, sticky=(N,E), pady=10)
+        self.next_button.grid(column=2, row=3, sticky=(S,E), pady=10)
 
         self.previous_button = ttk.Button(self, text='Previous')
         self.previous_button['command'] = lambda: self.controller.show_frame(self.order_index - 1)
-        self.previous_button.grid(column=0, row=2, sticky=(N,E), pady=10)
+        self.previous_button.grid(column=0, row=3, sticky=(S,W), pady=10, padx=10)
+
+
+
 
 
 class CalculatorResultFrame(ttk.Frame):
@@ -50,6 +82,8 @@ class CalculatorResultFrame(ttk.Frame):
         self.previous_button['command'] = lambda: self.controller.show_frame(self.order_index - 1)
         self.previous_button.grid(column=0, row=1, sticky=(N,E), pady=10)
 
+    def prep(self):
+        pass
 
 class ModelSetupFrame(ttk.Frame):
     
@@ -65,6 +99,9 @@ class ModelSetupFrame(ttk.Frame):
         pf.add(left_panel)
         pf.add(right_panel)
         pf.grid(column=0,row=0, sticky=(N,W,E,S))
+
+        # set this attribute to None- if pre-defined models are loaded, it will be reset.
+        self.model = None
 
         ############################ left panel material begin #######################################################
         ############################ left tab material begin ########################################################
@@ -129,10 +166,15 @@ class ModelSetupFrame(ttk.Frame):
         self.reaction_summary_panel = AutoScrollable(right_panel)
         self.reaction_summary_panel.grid(column=0, row=0, sticky=(N,S,E,W))
 
+        # a place to put error messages when submissions have errors:
+        self.submission_error_text = StringVar()
+        self.submission_error_label = ttk.Label(right_panel, textvariable=self.submission_error_text)
+        self.submission_error_label.grid(column=0, row=1, sticky=(N,E), padx=(0,10))
+
         # a button for moving to the next step in the workflow.  Initially disabled, until the model is loaded
         self.next_button = ttk.Button(right_panel, text='Next')
-        self.next_button['command'] = lambda: self.controller.show_frame(self.order_index + 1)
-        self.next_button.grid(column=0, row=1, sticky=(N,E), pady=10)
+        self.next_button['command'] = lambda: self.store_model_and_advance()
+        self.next_button.grid(column=1, row=1, sticky=(N,E), pady=10)
         self.next_button.state(['disabled'])
 
         for child in right_panel.winfo_children():
@@ -157,12 +199,58 @@ class ModelSetupFrame(ttk.Frame):
         filepath = askopenfilename()
         self.clear_reaction_panel()
         try:
-            reactions = load_model_from_file(filepath)
+            self.model = self.controller.load_model_from_file(filepath)
+            reactions = self.model.get_reactions()
             self.load_reactions(reactions)
+            self.submission_error_text.set('')
         except Exception as ex:
             print 'exception caught'
             error_msg = ttk.Label(self.reaction_summary_panel.frame, text=ex.message)
             error_msg.grid(column=0, row=0)
+
+    def store_model_and_advance(self):
+        # 'save' the model (by parsing the ReactionEntryPanel widgets) and push it up
+        # to the 'main' app, so that other pages have access to the model
+        reaction_strings_dict = {}
+        for reaction_id, reaction_widget in self.current_reaction_widget_dict.items():
+
+            reactant_str = reaction_widget.reactants.get()
+            product_str = reaction_widget.products.get()
+            ka = reaction_widget.ka.get()
+            kd = reaction_widget.kd.get()
+            direction_symbol = reaction_widget.direction_symbol.get()
+            reaction_strings_dict[reaction_id] = '%s %s %s, %s, %s' % (reactant_str, direction_symbol, product_str, ka, kd)
+
+        try:
+
+            # even if the model was loaded from a file (with initial conditions, etc) the user could have edited it,
+            # so we get the most recent state here.  However, in the case that the model was loaded from a file, a model
+            # instance exists somewhere.  We *might* be able to get initial conditions and/or simulation time from that
+            # We then insert those parameters into the 'new' Model instance below
+            reaction_factory = utils.GUIReactionFactory(reaction_strings_dict)
+            model = utils.Model(reaction_factory)
+
+            # if we happened to load the data from a file, get any initial conditions from that
+            if self.model:
+                initial_conditions_from_file = self.model.get_initial_conditions()
+                initial_conditions_from_file = {x:initial_conditions_from_file[x]
+                                                for x in initial_conditions_from_file.keys()
+                                                if x in model.get_all_elements()}
+                model.set_initial_conditions(initial_conditions_from_file)
+                simulation_time_from_file = self.model.get_simulation_time()
+                model.set_simulation_time(simulation_time_from_file)
+
+            self.controller.set_model(model)
+
+            # move on to the next page
+            self.controller.show_frame(self.order_index + 1)
+            self.submission_error_text.set('')
+        except Exception as ex:
+            print ex.message
+            self.submission_error_text.set(ex.detailed_message)
+            self.current_reaction_widget_dict[ex.error_index].reactant_entry.focus()
+            print ex.error_index
+            print ex.detailed_message
 
     def add_new_reaction(self, reaction_obj = None):
         reaction_widget = custom_widgets.ReactionEntryPanel(self.reaction_summary_panel.frame, reaction_obj=reaction_obj)
@@ -173,7 +261,7 @@ class ModelSetupFrame(ttk.Frame):
         eqn_index = self.reaction_indexer
         reaction_widget.grid(column=0, row=row_index, sticky=(N, S, E, W))
         rm_button = ttk.Button(self.reaction_summary_panel.frame, text='x', width=2)
-        rm_button['command']= lambda btn=rm_button, idx= eqn_index, obj=reaction_widget : self.remove_eqn(btn, idx, obj)
+        rm_button['command']= lambda btn=rm_button, idx= eqn_index, obj=reaction_widget: self.remove_eqn(btn, idx, obj)
         rm_button.grid(column=1, row=row_index)
         self.current_reaction_widget_dict[eqn_index] = reaction_widget
         self.reaction_indexer += 1
@@ -207,7 +295,6 @@ class ModelSetupFrame(ttk.Frame):
     def load_reactions(self, reactions):
         # remove any existing reactions-- we're loading fresh!
         self.clear_reaction_panel()
-
         for rx in reactions:
             self.add_new_reaction(rx)
 
@@ -226,13 +313,17 @@ class ModelSetupFrame(ttk.Frame):
             idx = int(idxs[0])
             selected_model_name = self.model_names[idx]
             try:
-                reactions = load_model_from_file(self.predefined_model_map[selected_model_name])
+                self.model = self.controller.load_model_from_file(self.predefined_model_map[selected_model_name])
+                reactions = self.model.get_reactions()
                 self.load_reactions(reactions)
+                self.submission_error_text.set('')
             except Exception as ex:
                 print 'exception caught'
                 error_msg = ttk.Label(self.reaction_summary_panel.frame, text=ex.message)
                 error_msg.grid(column=0, row=0)
 
+    def prep(self):
+        pass
 
 class AppMain(Tk):
 
@@ -256,17 +347,31 @@ class AppMain(Tk):
 
     def show_frame(self, idx):
         frame = self.frames[idx]
+        frame.prep()
         frame.tkraise()
         self.current_frame = idx
+
+    def set_model(self, model):
+        print 'pushing model to main app'
+        print model
+        self.model = model
+
+    def get_model(self):
+        return self.model
+
+    @staticmethod
+    def load_model_from_file(f):
+        print 'load from %s' % f
+        factory = utils.FileReactionFactory(f)
+        model = utils.Model(factory)
+        return model
+
 
 def gui_main():
 
     #root = Tk()
     root = AppMain()
     root.title("True T")
-
-    #model_setup_frame = ModelSetupFrame(root)
-    #model_setup_frame.grid(column=0, row=0, sticky=(N, W, E, S))
 
     # if the window is resized, change the size to follow:
     root.grid_columnconfigure(0, weight=1)

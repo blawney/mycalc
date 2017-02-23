@@ -39,6 +39,10 @@ class TestFileReader(unittest.TestCase):
         with self.assertRaises(utils.MalformattedReactionFileException):
             utils.FileReactionFactory(os.path.join(this_dir,'test_model_8.txt'))
 
+    def test_negative_simulation_time_raises_exception(self):
+        with self.assertRaises(utils.InvalidSimulationTimeException):
+            utils.FileReactionFactory(os.path.join(this_dir,'test_model_9.txt'))
+
     # tests related to equation section
     def test_missing_equation_section(self):
         with self.assertRaises(utils.MalformattedReactionFileException):

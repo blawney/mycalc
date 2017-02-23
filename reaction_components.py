@@ -51,8 +51,8 @@ class Reaction(object):
     def __str__(self):
         reactant_str = '+'.join([' %s ' %x for x in self._reactant_list])
         product_str = '+'.join([' %s ' %x for x in self._product_list])
-        if self._rev_k:
-            return '%s <--%s, %s--> %s' % (reactant_str, self._fwd_k, self._rev_k, product_str)
+        if self._rev_k is not None:
+            return '%s <--%s, %s--> %s' % (reactant_str, self._rev_k, self._fwd_k, product_str)
         else:
             return '%s --%s--> %s' % (reactant_str, self._fwd_k, product_str)
 
