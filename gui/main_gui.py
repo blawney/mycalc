@@ -11,7 +11,7 @@ import sys
 sys.path.append( os.path.dirname( os.path.dirname( os.path.abspath(__file__) ) ) )
 import utils
 import custom_widgets
-#import model_solvers
+import model_solvers
 
 
 class InitialConditionsFrame(ttk.Frame):
@@ -115,9 +115,9 @@ class CalculatorResultFrame(ttk.Frame):
         self.previous_button.grid(column=0, row=1, sticky=(N,E), pady=10)
 
     def prep(self):
-        #solver = model_solvers.ODESolver(self.controller.get_model())
-        #solution = solver.equilibrium_solution()
-        pass
+        solver = model_solvers.ODESolver(self.controller.get_model())
+        mapping, solution = solver.equilibrium_solution()
+        print solution[-1,:]
 
 class ModelSetupFrame(ttk.Frame):
     
