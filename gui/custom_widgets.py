@@ -68,5 +68,5 @@ class InitialConditionEntryPanel(ttk.Frame):
 
         self.ic = DoubleVar()
         self.ic.set(ic)
-        ic_entry = ttk.Entry(self, textvariable=self.ic)
-        ic_entry.grid(row=0, column=1, sticky=W, padx=10, pady=10)
+        self.ic_entry = ttk.Entry(self, textvariable=self.ic)
+        self.ic_entry.grid(row=0, column=1, sticky=W, padx=10, pady=10)

@@ -11,10 +11,11 @@ import sys
 sys.path.append( os.path.dirname( os.path.dirname( os.path.abspath(__file__) ) ) )
 import utils
 import custom_widgets
+#import model_solvers
 
 
 class InitialConditionsFrame(ttk.Frame):
-    #TODO: figure out how to update this when
+
     def __init__(self, parent, controller=None, order_index=0):
         ttk.Frame.__init__(self, parent)
         self.controller = controller
@@ -36,37 +37,68 @@ class InitialConditionsFrame(ttk.Frame):
         dl = ttk.Label(self, text="Initial conditions (Molar concentration)", anchor=W)
         dl.grid(row=0, column=1, sticky=W)
         ic_entry_frame = ttk.Frame(self)
-        ic_entry_frame.grid(row=1, column=1, padx=(20, 300))
+        ic_entry_frame.grid(row=1, column=1, padx=(20, 50))
         initial_conditions = self.model.get_initial_conditions()
         all_symbols = self.model.get_all_elements()
         longest_symbol = max([len(x) for x in all_symbols])
+        self.initial_condition_widgets = {}
         for i, s in enumerate(all_symbols):
             if s in initial_conditions:
                 ic_entry_widget = custom_widgets.InitialConditionEntryPanel(ic_entry_frame, s, initial_conditions[s], length=longest_symbol)
             else:
                 ic_entry_widget = custom_widgets.InitialConditionEntryPanel(ic_entry_frame, s, 0.0, length=longest_symbol)
             ic_entry_widget.grid(row=i, column=1)
+            self.initial_condition_widgets[s] = ic_entry_widget
 
         time_label = ttk.Label(self, text='Simulation time (seconds)', anchor=E)
         time_label.grid(column=2, row=0, sticky=E, padx=10, pady=10)
         time_entry_frame = ttk.Frame(self)
-        time_entry_frame.grid(row=1, column=2, sticky=(N,E), padx=(80,5))
+        time_entry_frame.grid(row=1, column=2, sticky=(N,E), padx=(30,5))
 
         self.sim_time = DoubleVar()
         self.sim_time.set(self.model.get_simulation_time())
         time_entry = ttk.Entry(time_entry_frame, textvariable=self.sim_time, width=4)
         time_entry.grid(row=0, column=0, sticky=(N,E), padx=10, pady=10)
 
-        self.next_button = Button(self, text='Next', anchor=E)
-        self.next_button['command'] = lambda: self.controller.show_frame(self.order_index + 1)
+        self.next_button = Button(self, text='Simulate', anchor=E)
+        self.next_button['command'] = lambda: self.store_model_and_advance()
         self.next_button.grid(column=2, row=3, sticky=(S,E), pady=10)
 
         self.previous_button = ttk.Button(self, text='Previous')
         self.previous_button['command'] = lambda: self.controller.show_frame(self.order_index - 1)
         self.previous_button.grid(column=0, row=3, sticky=(S,W), pady=10, padx=10)
 
+        self.ic_error_msg_var = StringVar()
+        self.ic_error_msg_label = ttk.Label(self, textvariable=self.ic_error_msg_var, anchor=E)
+        self.ic_error_msg_label.grid(column=1, row=3, sticky=E, padx=10, pady=10)
 
+        self.time_error_msg_var = StringVar()
+        self.time_error_msg_label = ttk.Label(time_entry_frame, textvariable=self.time_error_msg_var, anchor=E)
+        self.time_error_msg_label.grid(column=0, row=1, sticky=E, padx=10, pady=10)
 
+    def store_model_and_advance(self):
+
+        ic_dict = {}
+        is_clean = True
+        self.ic_error_msg_var.set('')
+        self.time_error_msg_var.set('')
+        for symbol, widget in self.initial_condition_widgets.items():
+            try:
+                ic_dict[symbol] = widget.ic.get()
+            except ValueError as ex:
+                is_clean = False
+                self.ic_error_msg_var.set('Problem with initial condition for symbol %s:\n %s' % (symbol, ex.message))
+                widget.ic_entry.focus()
+        self.model.set_initial_conditions(ic_dict)
+        try:
+            self.model.set_simulation_time(self.sim_time.get())
+        except Exception as ex:
+            is_clean = False
+            self.time_error_msg_var.set('Problem with simulation time: %s' % ex.message)
+
+        if is_clean:
+            self.controller.set_model(self.model)
+            self.controller.show_frame(self.order_index + 1)
 
 
 class CalculatorResultFrame(ttk.Frame):
@@ -83,6 +115,8 @@ class CalculatorResultFrame(ttk.Frame):
         self.previous_button.grid(column=0, row=1, sticky=(N,E), pady=10)
 
     def prep(self):
+        #solver = model_solvers.ODESolver(self.controller.get_model())
+        #solution = solver.equilibrium_solution()
         pass
 
 class ModelSetupFrame(ttk.Frame):
