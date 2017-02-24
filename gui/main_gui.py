@@ -12,6 +12,14 @@ sys.path.append( os.path.dirname( os.path.dirname( os.path.abspath(__file__) ) )
 import utils
 import custom_widgets
 import model_solvers
+import plot_methods
+
+import matplotlib
+matplotlib.use('TkAgg')
+
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+# implement the default mpl key bindings
+from matplotlib.backend_bases import key_press_handler
 
 
 class InitialConditionsFrame(ttk.Frame):
@@ -26,7 +34,8 @@ class InitialConditionsFrame(ttk.Frame):
         self.model = self.controller.get_model()
 
         reaction_summary_title = ttk.Label(self, text="Reaction summary", anchor=W)
-        reaction_summary_title.grid(row=0, column=0, sticky=W)
+        reaction_summary_title.config(font=60)
+        reaction_summary_title.grid(row=0, column=0, sticky=W, pady=(10,30))
         reaction_summary_frame = ttk.Frame(self)
         reaction_summary_frame.grid(column=0, row=1, padx=(10,100), sticky=(N,W))
         for i, reaction in enumerate(self.model.get_reactions()):
@@ -34,8 +43,9 @@ class InitialConditionsFrame(ttk.Frame):
             label.grid(column=0, row=i, pady=10, sticky=W)
 
 
-        dl = ttk.Label(self, text="Initial conditions (Molar concentration)", anchor=W)
-        dl.grid(row=0, column=1, sticky=W)
+        dl = ttk.Label(self, text="Initial conditions\n(Molar concentration)", anchor=W)
+        dl.config(font=60)
+        dl.grid(row=0, column=1, sticky=W, pady=(10,30))
         ic_entry_frame = ttk.Frame(self)
         ic_entry_frame.grid(row=1, column=1, padx=(20, 50))
         initial_conditions = self.model.get_initial_conditions()
@@ -51,7 +61,8 @@ class InitialConditionsFrame(ttk.Frame):
             self.initial_condition_widgets[s] = ic_entry_widget
 
         time_label = ttk.Label(self, text='Simulation time (seconds)', anchor=E)
-        time_label.grid(column=2, row=0, sticky=E, padx=10, pady=10)
+        time_label.config(font=60)
+        time_label.grid(column=2, row=0, sticky=E, padx=10, pady=(10,30))
         time_entry_frame = ttk.Frame(self)
         time_entry_frame.grid(row=1, column=2, sticky=(N,E), padx=(30,5))
 
@@ -107,17 +118,65 @@ class CalculatorResultFrame(ttk.Frame):
         ttk.Frame.__init__(self, parent)
         self.controller = controller
         self.order_index = order_index
-        dl = ttk.Label(self, text="results")
-        dl.grid(row=0, column=0)
+        self.full_container = AutoScrollable(self)
+        self.full_container.pack(fill=BOTH, expand=1)
+        #self.full_container.grid(column=0, row=0,  sticky=(N,S,E,W))
+        dl = ttk.Label(self.full_container.frame, text="Results", anchor=W)
+        dl.config(font=90)
+        dl.grid(row=0, column=0, columnspan=2, sticky=(N,W), pady=(20,20))
 
-        self.previous_button = ttk.Button(self, text='Previous')
+        self.previous_button = Button(self.full_container.frame, text='Previous', anchor=W)
         self.previous_button['command'] = lambda: self.controller.show_frame(self.order_index - 1)
-        self.previous_button.grid(column=0, row=1, sticky=(N,E), pady=10)
+        self.previous_button.grid(column=0, row=3, sticky=(N,W), pady=10, padx=10)
+
+        self.plot_frame = ttk.Frame(self.full_container.frame)
+        self.plot_frame.grid(column=1, row=2)
 
     def prep(self):
         solver = model_solvers.ODESolver(self.controller.get_model())
-        mapping, solution = solver.equilibrium_solution()
-        print solution[-1,:]
+        self.species_to_column_mapping, self.solution, self.sim_time = solver.equilibrium_solution()
+        print self.solution[-1,:]
+        dl = ttk.Label(self.full_container.frame, text="Final concentrations",anchor=W)
+        dl.config(font=40)
+        dl.grid(row=1, column=0, sticky=(N,W), pady=10)
+        result_panel = ttk.Frame(self.full_container.frame)
+        result_panel.grid(column=0, row=2, sticky=(N,W), padx=(20,10))
+        for species, index in self.species_to_column_mapping.items():
+            result_widget = custom_widgets.FinalConcentrationDisplayPanel(result_panel,
+                                                                          species,
+                                                                          self.solution[-1,index],
+                                                                          self.create_plot)
+            result_widget.grid(column=0, row=index, sticky=W)
+        self.clear_plot()
+
+    def clear_plot(self):
+        print 'clear plots'
+        print self.plot_frame
+        for child in self.plot_frame.winfo_children():
+            print 'child: %s' % child
+            child.destroy()
+
+    def create_plot(self, species):
+        current_h = self.controller.winfo_height()
+        current_w = self.controller.winfo_width()
+        self.clear_plot()
+        column_index = self.species_to_column_mapping[species]
+        yvals = self.solution[:, column_index]
+        title = 'Evolution of %s' % species
+        fig = plot_methods.plot_evolution(self.sim_time, yvals, current_h, current_w, title, species)
+
+        # a tk.DrawingArea
+        self.canvas = FigureCanvasTkAgg(fig, master=self.plot_frame)
+        self.canvas.show()
+        #canvas.get_tk_widget().grid(row=1, column=1, sticky=E)
+        self.canvas.get_tk_widget().pack(side=TOP, anchor=W)
+
+        #toolbar = NavigationToolbar2TkAgg(canvas, self.plot_frame)
+        self.toolbar = plot_methods.CustomToolbar(self.canvas, self.plot_frame)
+        self.toolbar.update()
+        #canvas._tkcanvas.grid(row=2, column=1)
+        self.canvas._tkcanvas.pack(side=TOP)
+
 
 class ModelSetupFrame(ttk.Frame):
     
@@ -412,9 +471,19 @@ def gui_main():
     root.grid_rowconfigure(0, weight=1)
 
     w, h = root.winfo_screenwidth(), root.winfo_screenheight()
+    print w,h
     root.geometry("%dx%d+0+0" % (int(w/2.0), int(h/2.0)))
     return root
 
+
 if __name__ == '__main__':
     gui_root = gui_main()
+
+    def on_closing():
+        #if ttk.messagebox.askokcancel('Quit', 'Do you want to quit?'):
+        gui_root.destroy()
+
+    gui_root.protocol('WM_DELETE_WINDOW', on_closing)
+
+
     gui_root.mainloop()

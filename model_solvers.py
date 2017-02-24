@@ -89,8 +89,9 @@ class ODESolver(Solver):
 
     def equilibrium_solution(self):
         tmax = self.model.get_simulation_time()
+        print 'solve: tmax=%s' % tmax
         t = np.linspace(0, tmax, 100000)
         X = integrate.odeint(self.dX_dt, self.initial_conditions, t)
-        return self.species_mapping, X
+        return self.species_mapping, X, t
 
 

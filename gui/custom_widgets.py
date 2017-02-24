@@ -47,7 +47,6 @@ class ReactionEntryPanel(ttk.Frame):
             child.grid_configure(padx=5, pady=5)
 
     def on_direction_change(self, *args):
-        print 'event fired!'
         if self.direction_symbol.get().startswith('<'):
             self.is_bidirectional = True
             self.kd.set(0.0)
@@ -70,3 +69,19 @@ class InitialConditionEntryPanel(ttk.Frame):
         self.ic.set(ic)
         self.ic_entry = ttk.Entry(self, textvariable=self.ic)
         self.ic_entry.grid(row=0, column=1, sticky=W, padx=10, pady=10)
+
+
+class FinalConcentrationDisplayPanel(ttk.Frame):
+    def __init__(self, parent, species, final_concentration, plot_func):
+        ttk.Frame.__init__(self, parent)
+
+        text = '%s: %s' % (species, final_concentration)
+        label = ttk.Label(self, text=text, anchor=W)
+        label.grid(column=1, row=0, sticky=W, padx=10, pady=10)
+
+        show_plot_button = Button(self, text='Show plot', anchor=W)
+        show_plot_button.grid(row=0, column=0)
+        show_plot_button['command'] = lambda: plot_func(species)
+
+
+

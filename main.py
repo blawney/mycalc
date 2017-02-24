@@ -9,5 +9,5 @@ if __name__ == '__main__':
     factory = utils.FileReactionFactory(eqn_file)
     model = utils.Model(factory)
     solver = model_solvers.ODESolver(model)
-    sample_to_column_mapping, solution = solver.equilibrium_solution()
+    sample_to_column_mapping, solution, t = solver.equilibrium_solution()
     print solution[-1,:]
