@@ -8,6 +8,10 @@ if __name__ == '__main__':
 
     factory = utils.FileReactionFactory(eqn_file)
     model = utils.Model(factory)
-    solver = model_solvers.ODESolver(model)
-    sample_to_column_mapping, solution, t = solver.equilibrium_solution()
-    print solution[-1,:]
+    solver1 = model_solvers.ODESolver(model)
+    sample_to_column_mapping, solution1, t = solver1.equilibrium_solution()
+    print solution1[-1,:]
+
+    solver2 = model_solvers.ODESolverWJacobian(model)
+    sample_to_column_mapping, solution2, t = solver2.equilibrium_solution()
+    print solution2[-1,:]
