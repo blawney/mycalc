@@ -1,12 +1,14 @@
 __author__ = 'brian'
 
-
 import sys
+
 import os
+
+
 sys.path.append( os.path.dirname( os.path.dirname( os.path.abspath(__file__) ) ) )
 
-import utils
-from reaction_components import Reaction, Reactant, Product
+from src import utils
+from src.reaction_components import Reaction, Reactant, Product
 import unittest
 
 

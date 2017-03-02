@@ -1,11 +1,14 @@
 __author__ = 'brian'
 
 import sys
+
 import os
+
+
 sys.path.append( os.path.dirname( os.path.dirname( os.path.abspath(__file__) ) ) )
 
-import utils
-from reaction_components import Reactant, Product, Reaction
+from src import utils
+from src.reaction_components import Reactant, Product
 import unittest
 
 class TestStringExpressionParser(unittest.TestCase):

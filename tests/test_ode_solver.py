@@ -1,15 +1,17 @@
 __author__ = 'brian'
 
 import sys
+
 import os
 import unittest
 import numpy as np
 import numpy.testing as npt
+
+
 sys.path.append( os.path.dirname( os.path.dirname( os.path.abspath(__file__) ) ) )
 
-import model_solvers
-import utils
-from reaction_components import Reaction, Reactant, Product
+from src import utils, model_solvers
+from src.reaction_components import Reaction, Reactant, Product
 
 
 class MockedReactionFactory(object):

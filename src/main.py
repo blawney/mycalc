@@ -1,7 +1,6 @@
 __author__ = 'brian'
 
-import utils
-import model_solvers
+from src import utils, model_solvers
 
 if __name__ == '__main__':
     eqn_file = 'testosterone_model.txt'

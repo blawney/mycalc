@@ -1,7 +1,7 @@
 __author__ = 'brianlawney'
 import os
 import re
-from reaction_components import Reaction, Reactant, Product
+from src.reaction_components import Reaction, Reactant, Product
 
 
 class FileSourceNotFound(Exception):

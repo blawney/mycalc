@@ -6,20 +6,18 @@ from tkFileDialog import askopenfilename
 from autoscrollbar import AutoScrollable
 import glob
 import os
-import sys
+
 
 sys.path.append( os.path.dirname( os.path.dirname( os.path.abspath(__file__) ) ) )
-import utils
+from src import utils, model_solvers
 import custom_widgets
-import model_solvers
 import plot_methods
 
 import matplotlib
 matplotlib.use('TkAgg')
 
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 # implement the default mpl key bindings
-from matplotlib.backend_bases import key_press_handler
 
 
 class InitialConditionsFrame(ttk.Frame):
