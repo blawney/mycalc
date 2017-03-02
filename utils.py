@@ -51,6 +51,9 @@ class InvalidSimulationTimeException(Exception):
 class InitialConditionGivenForMissingElement(Exception):
     pass
 
+class InvalidInitialConditionException(Exception):
+    pass
+
 
 class ReactionErrorWithTrackerException(Exception):
     def __init__(self, error_index, detailed_message):
@@ -89,6 +92,12 @@ class Model(object):
             for symbol in self._initial_conditions.keys():
                 if symbol not in self.all_elements:
                     raise InitialConditionGivenForMissingElement('Symbol %s was not in your equations.' % symbol)
+                try:
+                    c0 = float(self._initial_conditions[symbol])
+                    if c0 < 0:
+                        raise InvalidInitialConditionException('Initial condition error- cannot be < 0')
+                except ValueError:
+                    raise InvalidInitialConditionException('Could not parse initial condition as a number.')
 
     def determine_all_elements(self):
         all_symbols = set()
@@ -207,7 +216,11 @@ class FileReactionFactory(ReactionFactory):
                 if len(ic) > 0:
                     try:
                         symbol, c0 = [x.strip() for x in ic.split('=')]
-                        initial_conditions[symbol] = float(c0)
+                        c0 = float(c0)
+                        if c0 > 0:
+                            initial_conditions[symbol] = c0
+                        else:
+                            raise InvalidInitialConditionException('Initial condition must be >= 0 (since a concentration)')
                     except ValueError as ex:
                         raise MalformattedReactionFileException("""
                             The initial condition for symbol %s is not valid""" %  symbol)

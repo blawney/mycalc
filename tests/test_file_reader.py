@@ -35,6 +35,10 @@ class TestFileReader(unittest.TestCase):
         with self.assertRaises(utils.MissingInitialConditionsException):
             utils.FileReactionFactory(os.path.join(this_dir,'test_model_4.txt'))
 
+    def test_negative_initial_condition_raises_exception(self):
+        with self.assertRaises(utils.InvalidInitialConditionException):
+            utils.FileReactionFactory(os.path.join(this_dir,'test_model_10.txt'))
+
     def test_non_number_initial_condition_raises_exception(self):
         with self.assertRaises(utils.MalformattedReactionFileException):
             utils.FileReactionFactory(os.path.join(this_dir,'test_model_8.txt'))
@@ -53,10 +57,6 @@ class TestFileReader(unittest.TestCase):
             utils.FileReactionFactory(os.path.join(this_dir,'test_model_6.txt'))
 
     def test_missing_line_ignored(self):
-        """
-        equation section has a blank line.
-        :return:
-        """
         f = utils.FileReactionFactory(os.path.join(this_dir,'test_model_7.txt'))
         all_reactions = f.get_reactions()
         self.assertEqual(len(all_reactions),2)
