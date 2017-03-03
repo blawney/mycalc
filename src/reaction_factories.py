@@ -7,6 +7,7 @@ from custom_exceptions import *
 import parsers
 from reaction_components import Reaction, Reactant, Product
 
+
 class ReactionFactory(object):
     """
     A base class to derive from.  Derived children of ReactionFactory should provide a mechanism to ingest information
@@ -33,6 +34,7 @@ class GUIReactionFactory(ReactionFactory):
         :param reaction_strings_dict: a dictionary with integer keys mapping to strings, which are formatted in our
          specified reaction syntax. The integer index provides a way to inform GUI users which reaction was improperly
          formatted.
+
         :return: None
         """
         self.expression_parser = parsers.StringExpressionParser
@@ -48,7 +50,9 @@ class GUIReactionFactory(ReactionFactory):
     def _create_reaction(self, reaction_expression):
         """
         Creates a Reaction object given a formatted reaction string
+
         :param reaction_expression: a string, formatted in the specified reaction syntax
+
         :return: a new Reaction instance
         """
         reactants, products, fwd_k, rev_k, is_bidirectional = self.expression_parser.parse(reaction_expression)
@@ -57,6 +61,7 @@ class GUIReactionFactory(ReactionFactory):
     def get_reactions(self):
         """
         Gets a list of the Reaction objects
+
         :return: a list of Reaction instances
         """
         return self._reaction_list
@@ -65,6 +70,7 @@ class GUIReactionFactory(ReactionFactory):
         """
         Get the initial conditions.  Due to the GUI setup,we do not necessarily have this information.  It can be
         specified via the GUI at a later step in the workflow
+
         :return: None
         """
         return None
@@ -73,6 +79,7 @@ class GUIReactionFactory(ReactionFactory):
         """
         Get the simulation time.  Due to the GUI setup,we do not necessarily have this information.  It can be
         specified via the GUI at a later step in the workflow
+
         :return: None
         """
         return None
@@ -91,7 +98,9 @@ class FileReactionFactory(ReactionFactory):
     def __init__(self, filepath):
         """
         Creates the FileReactionFactory instance
+
         :param filepath: a string giving the path to a reaction file
+
         :return: None
         """
         self._expression_parser = parsers.StringExpressionParser
@@ -105,6 +114,7 @@ class FileReactionFactory(ReactionFactory):
         """
         This method does the work of reading through the file and parsing out the sections for reactions, initial
         conditions, etc. The actual parsing of reactions is performed by the wrapped ExpressionParser instance
+
         :return: None
         """
         contents = open(self.reaction_file).read()
@@ -167,12 +177,20 @@ class FileReactionFactory(ReactionFactory):
             self._simulation_time = None
 
     def _create_reaction(self, reaction_expression):
+        """
+        Creates a Reaction object given a formatted reaction string
+
+        :param reaction_expression: a string, formatted in the specified reaction syntax
+
+        :return: a new Reaction instance
+        """
         reactants, products, fwd_k, rev_k, is_bidirectional = self._expression_parser.parse(reaction_expression)
         return Reaction(reactants, products, fwd_k, rev_k, is_bidirectional)
 
     def get_reactions(self):
         """
         Get the reactions from this factory
+
         :return: a list of Reaction instances
         """
         return self._reaction_list
@@ -180,6 +198,7 @@ class FileReactionFactory(ReactionFactory):
     def get_initial_conditions(self):
         """
         Get the initial conditions from the file
+
         :return: a one-to-one dictionary of species symbols mapped to floats
         """
         return self._initial_conditions
@@ -188,6 +207,7 @@ class FileReactionFactory(ReactionFactory):
         """
         Gets the simulation time specified in the file.  If this was not given in the file, it will end up returning
         None
+
         :return: float or None
         """
         return self._simulation_time

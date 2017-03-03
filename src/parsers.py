@@ -28,7 +28,9 @@ class StringExpressionParser(ExpressionParser):
     def _is_bidirectional(cls, s):
         """
         Determines if a reaction is bi-directional based on the symbol between the reactants and products.
+
         :param s: a string which is formatted according to our conventions
+
         :return: True or False
         """
         # parse out the directional symbol
@@ -45,7 +47,9 @@ class StringExpressionParser(ExpressionParser):
     def check_symbol_name(cls, symbol):
         """
         Checks that a species symbol follows our formatting rules
+
         :param symbol: a string
+
         :return: None
         """
         m = re.match(cls.symbol_regex, symbol)
@@ -59,6 +63,7 @@ class StringExpressionParser(ExpressionParser):
         a list of species.
 
         :param s: a string
+
         :return: a list of reaction_components.ReactionElement instances
         """
         element_dict = {}
@@ -92,7 +97,9 @@ class StringExpressionParser(ExpressionParser):
     def _parse_reaction(cls, reaction):
         """
         Parses the two sides (reactants and products) of a reaction string
+
         :param reaction: a string representation of a reaction in our syntax
+
         :return: a tuple of list objects.  The first entry is a list of Reactant instances and the second is a list
         of Product instances
         """

@@ -1,4 +1,4 @@
-__author__ = 'brianlawney'
+__author__ = 'brian'
 
 import numpy as np
 from scipy import integrate
@@ -36,6 +36,7 @@ class Solver(object):
         """
         Creates a numPy array which contains the initial conditions.  The initial concentrations of the species are
         located in the array via the species-to-index map that was created in Solver._create_species_mapping
+
         :return: None
         """
 
@@ -73,7 +74,7 @@ class ODESolver(Solver):
         This creates the stoichiometry (N) matrix and sets it as an attribute.
         Iterates through the reactions and fills in the matrix entries as appropriate
 
-        :return:
+        :return: None
         """
         reactions = self.model.get_reactions()
         N1 = np.zeros((len(self.species_mapping.keys()), len(reactions)))
@@ -96,7 +97,9 @@ class ODESolver(Solver):
         Due to the closure bindings
         (discussed here: http://stackoverflow.com/questions/233673/lexical-closures-in-python )
         this ends up looking a bit more involved.
+
         :param reactions: A list of reaction_components.Reaction objects
+
         :return: A list of functions (callables) which are used in calculating the time rate-of-change of the
         concentrations
         """
@@ -132,7 +135,9 @@ class ODESolver(Solver):
         scipy.integrate.odeint
 
         :param X: a numPy array of the current concentrations (floats)
+
         :param t: a float representing time.  Generally not used since we have autonomous equations
+
         :return: a numPy array giving the current time rate of change of the concentrations.
         """
         rate_vals = np.array([f(X) for f in self.rate_funcs])
@@ -141,7 +146,8 @@ class ODESolver(Solver):
     def equilibrium_solution(self):
         """
         Runs the integration to determine the equilibrium state
-        :return: a 3-tuple consisting of the species-to-index map, a numPy array giving the evolution of each species
+
+        :return: a 3-tuple consisting of the species-to-index map, a numPy array giving the evolution of each species \
         in the columns, and an array of the time steps.
         """
         tmax = self.model.get_simulation_time()
@@ -151,8 +157,18 @@ class ODESolver(Solver):
 
 
 class ODESolverWJacobian(Solver):
+    """
+    This solver includes a Jacobian and allows changing initial conditions and rate constants.  This allows for use
+    in curve-fitting procedures.
+    """
 
     def __init__(self, model):
+        """
+
+        :param model: a models.Model instance
+
+        :return: None
+        """
 
         self.model = model
         self._create_species_mapping()
@@ -184,6 +200,7 @@ class ODESolverWJacobian(Solver):
         """
         Creates the alpha and gamma matrices (M x J) given in the derivation of the model system.
         Also sets the member attribute Z, which is the difference gamma-alpha
+
         :return: None
         """
 
@@ -209,8 +226,11 @@ class ODESolverWJacobian(Solver):
         scipy.integrate.odeint
 
         :param X: a numPy array of the current concentrations (floats)
+
         :param t: a float representing time.  Generally not used since we have autonomous equations
+
         :param k: a numPy array of rate constants (floats)
+
         :return: a numPy array giving the current time rate of change of the concentrations.
         """
 
@@ -231,8 +251,11 @@ class ODESolverWJacobian(Solver):
         but by the iterative solvers such as scipy.integrate.odeint
 
         :param X: A numPy array of the current concentrations (floats)
+
         :param t: A float representing time.  Generally not used
+
         :param k: A numPy array of rate constants (floats)
+
         :return: A square numPy matrix which is the Jacobian
 
         """
@@ -273,16 +296,17 @@ class ODESolverWJacobian(Solver):
 
     def equilibrium_solution(self, X0=None, k=None):
         """
-        Runs the integration to determine the equilibrium state
-
-        :param X0: (optional) A dictionary mapping the symbols to the initial concentrations
-        :param k: (optional) An array of rate constants.
-        :return: a 3-tuple consisting of the species-to-index map, a numPy array giving the evolution of each species
-        in the columns, and an array of the time steps.
+        Runs the integration to determine the equilibrium state.
 
         Note that it's important that the array of rate constants is ordered in our convention.  Printing the
         model object is one way to check the order of the reactions so that the rate constants can be arranged
         in the proper order.
+
+        :param X0: (optional) A dictionary mapping the symbols to the initial concentrations
+
+        :param k: (optional) An array of rate constants.
+
+        :return: a 3-tuple consisting of the species-to-index map, a numPy array giving the evolution of each species in the columns, and an array of the time steps.
         """
         if X0 is not None:
             # if another set of initial conditions (different from that specified in the model file)

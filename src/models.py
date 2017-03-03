@@ -13,7 +13,9 @@ class Model(object):
         """
         To instantiate a Model, we must supply a source, which is a derived class of ReactionFactory.
         The reaction factory provides the necessary information to build a Model
+
         :param reaction_factory: an instance of type ReactionFactory
+
         :return: None
         """
         self._reactions = []
@@ -23,6 +25,7 @@ class Model(object):
     def _setup(self):
         """
         Initiates the Model instance by requesting the reactions, initial conditions, and simulation time from the factory
+
         :return: None
         """
         self._reactions = self._reaction_factory.get_reactions()
@@ -47,6 +50,7 @@ class Model(object):
         Ensures that sensible initial conditions were specified.  Checks that the initial conditions are only given
         for species that are in the set of reactions.  Also checks that they are >0 since we are modeling
         concentrations.  Some of the checks here are possibly redundant,
+
         :return: None
         """
         if self._initial_conditions:
@@ -63,6 +67,7 @@ class Model(object):
     def _determine_all_species(self):
         """
         Reads through all the reactions to determine a exhaustive set of the constituent species
+
         :return: None
         """
         all_symbols = set()
@@ -73,7 +78,9 @@ class Model(object):
     def set_initial_conditions(self, ic):
         """
         Allows reset of the initial conditions
+
         :param ic: a one-to-one dictionary of species (keys) mapping to initial concentrations (floats)
+
         :return: None
         """
         self._initial_conditions = ic
@@ -82,7 +89,9 @@ class Model(object):
     def set_simulation_time(self, t):
         """
         Allows set/reset of the simulation time
+
         :param t: A float, greater than zero
+
         :return: None
         """
         try:
@@ -97,6 +106,7 @@ class Model(object):
     def get_all_species(self):
         """
         Returns all the species in the model
+
         :return: A set of strings which give the species' symbols
         """
         return self._all_species
@@ -104,6 +114,7 @@ class Model(object):
     def get_reactions(self):
         """
         Returns all the reactions in this Model instance
+
         :return: A list of Reaction instances
         """
         return self._reactions
@@ -111,6 +122,7 @@ class Model(object):
     def get_initial_conditions(self):
         """
         Get the initial conditions set on the current Model instance
+
         :return: A dictionary (one-to-one) of species symbol (string) mapping to initial concentration (float)
         """
         return self._initial_conditions
@@ -118,6 +130,7 @@ class Model(object):
     def get_simulation_time(self):
         """
         Get the current length of the simulation (in seconds)
+
         :return: A float, giving the simulation length in seconds
         """
         return self._simulation_time
@@ -125,6 +138,7 @@ class Model(object):
     def __str__(self):
         """
         The string representation of the Model class
+
         :return: a string
         """
         s = ''

@@ -1,0 +1,163 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Model solvers (model_solvers.py) &#8212; True T 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Reaction Factories (reaction_factories.py)" href="reaction_factories.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="model-solvers-model-solvers-py">
+<h1>Model solvers (model_solvers.py)<a class="headerlink" href="#model-solvers-model-solvers-py" title="Permalink to this headline">¶</a></h1>
+<p>This module has code for solving the models.  Generally, these will be iterative models solved by integration or
+root-finding methods.</p>
+<span class="target" id="module-model_solvers"></span><dl class="class">
+<dt id="model_solvers.ODESolver">
+<em class="property">class </em><code class="descclassname">model_solvers.</code><code class="descname">ODESolver</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="headerlink" href="#model_solvers.ODESolver" title="Permalink to this definition">¶</a></dt>
+<dd><p>This solver was the first implementation and did not explicitly calculate a Jacobian</p>
+<p>Assumes that the rate constants and initial conditions are fixed, so this class is not suitable for use in
+performing curve-fitting operations (e.g. fitting rate constants).</p>
+<dl class="method">
+<dt id="model_solvers.ODESolver.equilibrium_solution">
+<code class="descname">equilibrium_solution</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_solvers.ODESolver.equilibrium_solution" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs the integration to determine the equilibrium state</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a 3-tuple consisting of the species-to-index map, a numPy array giving the evolution of each species         in the columns, and an array of the time steps.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="model_solvers.ODESolverWJacobian">
+<em class="property">class </em><code class="descclassname">model_solvers.</code><code class="descname">ODESolverWJacobian</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="headerlink" href="#model_solvers.ODESolverWJacobian" title="Permalink to this definition">¶</a></dt>
+<dd><p>This solver includes a Jacobian and allows changing initial conditions and rate constants.  This allows for use
+in curve-fitting procedures.</p>
+<dl class="method">
+<dt id="model_solvers.ODESolverWJacobian.equilibrium_solution">
+<code class="descname">equilibrium_solution</code><span class="sig-paren">(</span><em>X0=None</em>, <em>k=None</em><span class="sig-paren">)</span><a class="headerlink" href="#model_solvers.ODESolverWJacobian.equilibrium_solution" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs the integration to determine the equilibrium state.</p>
+<p>Note that it&#8217;s important that the array of rate constants is ordered in our convention.  Printing the
+model object is one way to check the order of the reactions so that the rate constants can be arranged
+in the proper order.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>X0</strong> &#8211; (optional) A dictionary mapping the symbols to the initial concentrations</li>
+<li><strong>k</strong> &#8211; (optional) An array of rate constants.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a 3-tuple consisting of the species-to-index map, a numPy array giving the evolution of each species in the columns, and an array of the time steps.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="model_solvers.Solver">
+<em class="property">class </em><code class="descclassname">model_solvers.</code><code class="descname">Solver</code><a class="headerlink" href="#model_solvers.Solver" title="Permalink to this definition">¶</a></dt>
+<dd><p>A base class for general solvers we might create to solve for the equilibrium state.</p>
+<p>Contains methods that are likely to be useful to derived classes.</p>
+<p>Instantiate a derived class, not this one.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="reaction_factories.html" title="previous chapter">Reaction Factories (reaction_factories.py)</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/model_solvers.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Brian Lawney.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/model_solvers.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

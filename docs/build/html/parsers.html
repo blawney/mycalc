@@ -1,0 +1,147 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Reaction parsers (parsers.py) &#8212; True T 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Reaction components (reaction_components.py)" href="reaction_components.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="reaction-parsers-parsers-py">
+<h1>Reaction parsers (parsers.py)<a class="headerlink" href="#reaction-parsers-parsers-py" title="Permalink to this headline">¶</a></h1>
+<p>This module has code related to parsing reactions.</p>
+<span class="target" id="module-parsers"></span><dl class="class">
+<dt id="parsers.ExpressionParser">
+<em class="property">class </em><code class="descclassname">parsers.</code><code class="descname">ExpressionParser</code><a class="headerlink" href="#parsers.ExpressionParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>A base class to derive from.  Derived children of this class ideally implement methods to parse individual
+reaction &#8216;sources&#8217;</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="parsers.StringExpressionParser">
+<em class="property">class </em><code class="descclassname">parsers.</code><code class="descname">StringExpressionParser</code><a class="headerlink" href="#parsers.StringExpressionParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>An implementation of ExpressionParser for reading strings and forming</p>
+<dl class="classmethod">
+<dt id="parsers.StringExpressionParser.check_symbol_name">
+<em class="property">classmethod </em><code class="descname">check_symbol_name</code><span class="sig-paren">(</span><em>symbol</em><span class="sig-paren">)</span><a class="headerlink" href="#parsers.StringExpressionParser.check_symbol_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks that a species symbol follows our formatting rules</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>symbol</strong> &#8211; a string</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="parsers.StringExpressionParser.parse">
+<em class="property">classmethod </em><code class="descname">parse</code><span class="sig-paren">(</span><em>expression_str</em><span class="sig-paren">)</span><a class="headerlink" href="#parsers.StringExpressionParser.parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function parses an expression given in our defined syntax.  This includes the reaction string and the
+rate constants for the forward and reverse directions</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>expression_str</strong> &#8211; a formatted string which gives the reaction</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a 5-ple giving 1) a list of Reactant instances, 2) a list of Product instances, 3) a forward rate constant (float), 4) a reverse rate constant (float), and 5) a boolean indicating whether the reaction occurs in both directions.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="reaction_components.html" title="previous chapter">Reaction components (reaction_components.py)</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/parsers.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Brian Lawney.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/parsers.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
