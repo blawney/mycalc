@@ -28,7 +28,7 @@ class Solver(object):
         """
         species_set = set()
         for rx in self.model.get_reactions():
-            species_set = species_set.union(rx.get_all_elements())
+            species_set = species_set.union(rx.get_all_species())
         sorted_species = sorted(list(species_set))
         self.species_mapping = dict(zip(sorted_species, range(len(sorted_species))))
 
@@ -286,7 +286,7 @@ class ODESolverWJacobian(Solver):
         """
         if X0 is not None:
             # if another set of initial conditions (different from that specified in the model file)
-            # is given, we ensure they're valid by using the method utils.Model.set_initial_conditions
+            # is given, we ensure they're valid by using the method models.Model.set_initial_conditions
             # then we reset our initial conditions in the solver.  This ensures that 1) approriate initial conditions
             self.model.set_initial_conditions(X0)
             self._setup_initial_conditions()

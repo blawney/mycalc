@@ -1,13 +1,11 @@
 __author__ = 'brian'
 
 import sys
-
 import os
-
 
 sys.path.append( os.path.dirname( os.path.dirname( os.path.abspath(__file__) ) ) )
 
-from src import utils
+from src import models, custom_exceptions
 from src.reaction_components import Reaction, Reactant, Product
 import unittest
 
@@ -56,5 +54,5 @@ class TestModel(unittest.TestCase):
         reaction_factory.set_reaction(reactions)
         reaction_factory.set_initial_conditions({'A':1.0, 'F':0.2})
 
-        with self.assertRaises(utils.InitialConditionGivenForMissingElement):
-            model = utils.Model(reaction_factory)
+        with self.assertRaises(custom_exceptions.InitialConditionGivenForMissingElement):
+            model = models.Model(reaction_factory)

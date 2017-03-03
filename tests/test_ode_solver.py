@@ -7,10 +7,9 @@ import unittest
 import numpy as np
 import numpy.testing as npt
 
-
 sys.path.append( os.path.dirname( os.path.dirname( os.path.abspath(__file__) ) ) )
 
-from src import utils, model_solvers
+from src import custom_exceptions, model_solvers, models
 from src.reaction_components import Reaction, Reactant, Product
 
 
@@ -261,8 +260,8 @@ class TestODESolverWJacobian(unittest.TestCase):
         reaction_factory.set_reaction(reactions)
         reaction_factory.set_initial_conditions({'A':1.0, 'E':0.2})
 
-        with self.assertRaises(utils.InvalidInitialConditionException):
-            model = utils.Model(reaction_factory)
+        with self.assertRaises(custom_exceptions.InvalidInitialConditionException):
+            model = models.Model(reaction_factory)
             solver = model_solvers.ODESolverWJacobian(model)
             bad_new_initial_conditions = {'A':-1.0, 'B':2}
             solver.equilibrium_solution(X0=bad_new_initial_conditions)
@@ -289,8 +288,8 @@ class TestODESolverWJacobian(unittest.TestCase):
         reaction_factory.set_reaction(reactions)
         reaction_factory.set_initial_conditions({'A':1.0, 'E':0.2})
 
-        with self.assertRaises(utils.InitialConditionGivenForMissingElement):
-            model = utils.Model(reaction_factory)
+        with self.assertRaises(custom_exceptions.InitialConditionGivenForMissingElement):
+            model = models.Model(reaction_factory)
             solver = model_solvers.ODESolverWJacobian(model)
             bad_new_initial_conditions = {'A':1.0, 'F':2}
             solver.equilibrium_solution(X0=bad_new_initial_conditions)

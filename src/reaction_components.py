@@ -2,12 +2,26 @@ __author__ = 'brianlawney'
 
 
 class Reaction(object):
+    """
+    This class holds all the components of a reaction- the constitutive species, rate constants, the direction
+    of reaction
+    """
     def __init__(self,
                  reactants,
                  products,
                  fwd_k,
                  rev_k=None,
                  is_bidirectional=False):
+        """
+
+        :param reactants: A list of Reactant instances
+
+        :param products:
+        :param fwd_k:
+        :param rev_k:
+        :param is_bidirectional:
+        :return:
+        """
 
         self._reactant_list = reactants
         self._product_list = products
@@ -30,17 +44,17 @@ class Reaction(object):
     def is_bidirectional_reaction(self):
         return self.is_bidirectional
 
-    def get_all_elements(self):
+    def get_all_species(self):
         """
         A set of the symbols (Strings)
         :return:
         """
-        element_set = set()
+        species_set = set()
         for r in self._reactant_list:
-            element_set.add(r.symbol)
+            species_set.add(r.symbol)
         for r in self._product_list:
-            element_set.add(r.symbol)
-        return element_set
+            species_set.add(r.symbol)
+        return species_set
 
     def reactant_str(self):
         return '+'.join([' %s ' %x for x in self._reactant_list])

@@ -7,9 +7,8 @@ from autoscrollbar import AutoScrollable
 import glob
 import os
 
-
 sys.path.append( os.path.dirname( os.path.dirname( os.path.abspath(__file__) ) ) )
-from src import utils, model_solvers
+from src import models, model_solvers, reaction_factories
 import custom_widgets
 import plot_methods
 
@@ -47,7 +46,7 @@ class InitialConditionsFrame(ttk.Frame):
         ic_entry_frame = ttk.Frame(self)
         ic_entry_frame.grid(row=1, column=1, padx=(20, 50))
         initial_conditions = self.model.get_initial_conditions()
-        all_symbols = self.model.get_all_elements()
+        all_symbols = self.model.get_all_species()
         longest_symbol = max([len(x) for x in all_symbols])
         self.initial_condition_widgets = {}
         for i, s in enumerate(all_symbols):
@@ -318,15 +317,15 @@ class ModelSetupFrame(ttk.Frame):
             # so we get the most recent state here.  However, in the case that the model was loaded from a file, a model
             # instance exists somewhere.  We *might* be able to get initial conditions and/or simulation time from that
             # We then insert those parameters into the 'new' Model instance below
-            reaction_factory = utils.GUIReactionFactory(reaction_strings_dict)
-            model = utils.Model(reaction_factory)
+            reaction_factory = reaction_factories.GUIReactionFactory(reaction_strings_dict)
+            model = models.Model(reaction_factory)
 
             # if we happened to load the data from a file, get any initial conditions from that
             if self.model:
                 initial_conditions_from_file = self.model.get_initial_conditions()
                 initial_conditions_from_file = {x:initial_conditions_from_file[x]
                                                 for x in initial_conditions_from_file.keys()
-                                                if x in model.get_all_elements()}
+                                                if x in model.get_all_species()}
                 model.set_initial_conditions(initial_conditions_from_file)
                 simulation_time_from_file = self.model.get_simulation_time()
                 model.set_simulation_time(simulation_time_from_file)
@@ -453,14 +452,13 @@ class AppMain(Tk):
     @staticmethod
     def load_model_from_file(f):
         print 'load from %s' % f
-        factory = utils.FileReactionFactory(f)
-        model = utils.Model(factory)
+        factory = reaction_factories.FileReactionFactory(f)
+        model = models.Model(factory)
         return model
 
 
 def gui_main():
 
-    #root = Tk()
     root = AppMain()
     root.title("True T")
 
