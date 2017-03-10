@@ -30,7 +30,7 @@ class Solver(object):
         for rx in self.model.get_reactions():
             species_set = species_set.union(rx.get_all_species())
         sorted_species = sorted(list(species_set))
-        self.species_mapping = dict(zip(sorted_species, range(len(sorted_species))))
+        self._species_mapping = dict(zip(sorted_species, range(len(sorted_species))))
 
     def _setup_initial_conditions(self):
         """
@@ -41,8 +41,8 @@ class Solver(object):
         """
 
         ic_from_model = self.model.get_initial_conditions()
-        initial_conditions = np.zeros(len(self.species_mapping.keys()))
-        for symbol, index in self.species_mapping.items():
+        initial_conditions = np.zeros(len(self._species_mapping.keys()))
+        for symbol, index in self._species_mapping.items():
             # species_mapping maps the symbol to the index of the concentration array
             if symbol in ic_from_model:
                 initial_conditions[index] = ic_from_model[symbol]
@@ -77,12 +77,12 @@ class ODESolver(Solver):
         :return: None
         """
         reactions = self.model.get_reactions()
-        N1 = np.zeros((len(self.species_mapping.keys()), len(reactions)))
+        N1 = np.zeros((len(self._species_mapping.keys()), len(reactions)))
         for j, rx in enumerate(reactions):
             for r in rx.get_reactants():
-                N1[self.species_mapping[r.symbol], j] = -1*r.coefficient
+                N1[self._species_mapping[r.symbol], j] = -1*r.coefficient
             for p in rx.get_products():
-                N1[self.species_mapping[p.symbol], j] = p.coefficient
+                N1[self._species_mapping[p.symbol], j] = p.coefficient
         self.N = np.hstack([N1, -N1])
 
     def _calculate_rate_law_funcs(self, reactions):
@@ -122,7 +122,7 @@ class ODESolver(Solver):
             for j, element_list in enumerate([rx.get_reactants(), rx.get_products()]):
                 idx_and_coef = {}
                 for r in element_list:
-                    index = self.species_mapping[r.symbol]
+                    index = self._species_mapping[r.symbol]
                     idx_and_coef[index] = r.coefficient
                 rate_const = rx.get_fwd_k() if j == 0 else rx.get_rev_k()
                 rate_funcs[i+j*len(reactions)] = rate_generator_func(idx_and_coef, rate_const)
@@ -153,7 +153,7 @@ class ODESolver(Solver):
         tmax = self.model.get_simulation_time()
         t = np.linspace(0, tmax, 100000)
         X = integrate.odeint(self._dX_dt, self.initial_conditions, t)
-        return self.species_mapping, X, t
+        return self._species_mapping, X, t
 
 
 class ODESolverWJacobian(Solver):
@@ -205,7 +205,7 @@ class ODESolverWJacobian(Solver):
         """
 
         # The number of species and the number of equations
-        self.M = len(self.species_mapping.keys())
+        self.M = len(self._species_mapping.keys())
 
         # alpha and gamma refer to the documentation nomenclature
         # both (M x J) matrices describing the stoichiometric coefficients
@@ -214,9 +214,9 @@ class ODESolverWJacobian(Solver):
 
         for q, rx in enumerate(self.model.get_reactions()):
             for reactant in rx.get_reactants():
-                self.alpha[self.species_mapping[reactant.symbol], q] = reactant.coefficient
+                self.alpha[self._species_mapping[reactant.symbol], q] = reactant.coefficient
             for product in rx.get_products():
-                self.gamma[self.species_mapping[product.symbol], q] = product.coefficient
+                self.gamma[self._species_mapping[product.symbol], q] = product.coefficient
         # the sum of -alpha and gamma ends up being something we use a lot, so calculate the difference up front:
         self.Z = self.gamma - self.alpha
 
@@ -294,6 +294,9 @@ class ODESolverWJacobian(Solver):
             k[self.J:, np.newaxis] * (self.gamma.T) * chi_r * phi
         return np.dot(self.Z, V)
 
+    def get_species_mapping(self):
+        return self._species_mapping
+
     def equilibrium_solution(self, X0=None, k=None):
         """
         Runs the integration to determine the equilibrium state.
@@ -318,4 +321,4 @@ class ODESolverWJacobian(Solver):
         tmax = self.model.get_simulation_time()
         t = np.linspace(0, tmax, 100000)
         X = integrate.odeint(self._dX_dt, self.initial_conditions, t, args=(k,), Dfun=self._jacobian)
-        return self.species_mapping, X, t
+        return self._species_mapping, X, t
