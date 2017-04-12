@@ -148,7 +148,7 @@ class TestODESolver(unittest.TestCase):
         m = MockedModel()
         m.add_reactions(reactions)
         solver = model_solvers.ODESolver(m)
-        result = solver.species_mapping
+        result = solver.get_species_mapping()
         expected = {'A':0, 'B':1, 'C':2, 'D':3, 'E':4}
         self.assertEqual(result, expected)
 

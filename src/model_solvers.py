@@ -53,6 +53,9 @@ class Solver(object):
     def equilibrium_solution(self):
         raise NotImplementedError
 
+    def get_species_mapping(self):
+        return self._species_mapping
+
 
 class ODESolver(Solver):
     """
@@ -293,9 +296,6 @@ class ODESolverWJacobian(Solver):
         V = k[:self.J, np.newaxis] * (self.alpha.T) * chi_l * theta -\
             k[self.J:, np.newaxis] * (self.gamma.T) * chi_r * phi
         return np.dot(self.Z, V)
-
-    def get_species_mapping(self):
-        return self._species_mapping
 
     def equilibrium_solution(self, X0=None, k=None):
         """
