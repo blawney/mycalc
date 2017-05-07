@@ -62,6 +62,18 @@ class Reaction(object):
     def product_str(self):
         return '+'.join([' %s ' %x for x in self._product_list])
 
+    def as_string(self):
+        reactant_str = '+'.join([' %s ' %x for x in self._reactant_list])
+        product_str = '+'.join([' %s ' %x for x in self._product_list])
+	direction = '<-->' if self.is_bidirectional else '-->'
+        s = reactant_str +  direction + product_str
+	s += ',%s' % self._fwd_k
+        if self._rev_k is not None:
+            s += ',%s' % self._fwd_k
+	else:
+            s += ',0'
+	return s
+
     def __str__(self):
         reactant_str = '+'.join([' %s ' %x for x in self._reactant_list])
         product_str = '+'.join([' %s ' %x for x in self._product_list])
