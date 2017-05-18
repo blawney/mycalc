@@ -5,6 +5,10 @@ import models
 import os
 import pandas as pd
 
+class BatchCalculationException(Exception):
+    pass
+
+
 def process_batch(df, eqn_file):
     """
     df is a Pandas DataFrame instance.
@@ -22,18 +26,17 @@ def process_batch(df, eqn_file):
     model = models.Model(factory)
     solver = model_solvers.ODESolverWJacobian(model)
 
-    # get all the species:
+    # get all the species given in the model file:
     species_set = set()
     for rx in factory.get_reactions():
         species_set = species_set.union(rx.get_all_species())
 
-
-    df = pd.read_table(input_file)
+    # From a general model file we cannot judge which species are necessary for creating
+    # a sensible reaction system.  We also would like to allow more columns than just the
+    # data we're operating on, so we want to ignore those columns.  
     col_set = set(df.columns.tolist())
-    if len(col_set.difference(species_set)) > 0:
-        pass # problem!
-    df['SHBG'] = df['SHBG'] * 0.5
-    df['Alb'] = df['Alb'] * 1e9 * (10./65000)
+    if len(col_set.intersection(species_set)) == 0:
+        raise BatchCalculationException('The input dataframe did not contain any columns headers in common with our reaction system.')
 
     def process(row, species_set):
         """
