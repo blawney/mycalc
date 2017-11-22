@@ -1,0 +1,8 @@
+*.pyc
+settings.py
+webapp/uploads/*txt
+webapp/user_models/*
+*.swp
+*.save
+db.sqlite3
+manage.py

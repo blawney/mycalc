@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	</head>
+	<body>
+		<form enctype="multipart/form-data" action="/upload/" method="post">
+			{% csrf_token %}
+			{{form.as_p}}	
+			<input type="submit" value="Submit" />
+		</form>
+		{% if result_link %}
+			<a href="{{result_link}}">Download results</a>
+		{% endif %}
+		{% if result_table %}
+			{{result_table}}
+		{% endif %}
+	</body>
+</html>

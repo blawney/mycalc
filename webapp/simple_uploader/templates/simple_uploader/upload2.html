@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <!-- Latest compiled and minified CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+        <!-- Optional theme -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+        <style>
+            #navigation-panel{
+                margin-top:60px;
+            }
+            #upload-panel{
+                margin-top:60px;
+            }
+            
+            .reaction-wrapper{
+                margin:30px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="row">
+                <div id="navigation-panel">
+                    <!-- Nav tabs -->
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li id="model-tab" role="presentation" class="active"><a href="#model" aria-controls="home" role="tab" data-toggle="tab">Model</a></li>
+                        <li role="presentation"><a href="#single-calc" aria-controls="single-calc" role="tab" data-toggle="tab">Single calculation</a></li>
+                        <li role="presentation"><a href="#batch-calc" aria-controls="batch-calc" role="tab" data-toggle="tab">Batch calculation</a></li>
+                    </ul>
+
+                <!-- Tab panes -->
+                    <div class="tab-content">
+                        <div role="tabpanel" class="tab-pane active" id="model">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <h4>Choose a model</h4>
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading">
+                                            Predefined model
+                                        </div>
+                                        <div id="predefined-model-panel-body" class="panel-body">
+                                            <div id="model-selector" class="dropdown">
+                                                <button class="btn btn-default dropdown-toggle" type="button" id="model-selector-button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                                    Choose a model...
+                                                    <span class="caret"></span>
+                                                </button>
+                                                <ul class="dropdown-menu" aria-labelledby="model-selector-button">
+						    {% for model in models %}
+                                                        <li><a href="#" model="{{model}}">{{model}}</a></li>
+						    {% endfor %}
+                                                </ul>
+                                            </div>
+                                            <div id="model-table-wrapper">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading">
+                                            New model
+                                        </div>
+                                        <div class="panel-body">
+                                             <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                                            <span>New reaction</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div role="tabpanel" class="tab-pane" id="single-calc">
+				<div class="row">
+					<div class="col-md-6 col-md-offset-3">
+						<div id="single-calc-wrapper"></div>
+					</div>
+				</div>
+                        </div>
+                        <div role="tabpanel" class="tab-pane" id="batch-calc">
+                            <div class="row">
+                                <div class="col-md-8 col-md-offset-2">
+                                    <div id="upload-panel" class="panel panel-default">
+                                        <div class="panel-heading">
+                                            Upload file
+                                        </div>
+                                        <div class="panel-body">
+                                                <div class="form-group">
+                                                    <label for="id_file">File:</label>
+                                                    <input type="file" name="file" required id="id_file" />
+                                                </div>
+						<button class="btn btn-default" id="submit-batch">Submit</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>  
+			    <div id="batch-results-wrapper" class="row">
+				<div id="batch-results" class="col-md-8 col-md-offset-2">
+				
+				</div>
+			    </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+        <!-- Latest compiled and minified JavaScript -->
+	<script src="https://code.jquery.com/jquery-3.2.1.min.js"
+			  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+			  crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script>
+        
+        var allModels;
+        
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = jQuery.trim(cookies[i]);
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }        
+        
+	var submitFileBtn = document.getElementById("submit-batch");
+	submitFileBtn.addEventListener("click", function(e){
+		var uploadElement = document.getElementById("id_file");
+		var files = uploadElement.files;
+		console.log(files);
+		var formData = new FormData();
+		formData.append('file', files[0]);
+
+            var csrftoken = getCookie('csrftoken');
+            xhr = new XMLHttpRequest();
+            xhr.open("POST", "/file-upload/");
+            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+            xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        console.log('successful');
+                        var response = JSON.parse(xhr.responseText);
+                        console.log(response);
+			document.getElementById("batch-results").innerHTML = response["result_html"];
+                    } else {
+                        console.log('failed');
+                    }
+                }
+            }
+            xhr.send(formData);		
+	});
+
+        $("#navigation-panel >.nav > li >a").click(function(e){
+            e.preventDefault();
+            
+            var modelTab = document.getElementById("model-tab");
+            if(modelTab.classList.contains("active")){
+                console.log('moving away from model!');
+		checkModel();
+            }
+            
+            $(this).tab('show');
+        });
+
+	checkModel = function(){
+		var tbl = $("#model-table");
+		if (tbl.length){
+			console.log('table existed');
+			var tableRows = tbl.children('.reaction-wrapper');
+			console.log(tableRows.length);
+			var reactionSet = {};
+			for (var i=0; i < tableRows.length; i++){
+				var row = tableRows[i];
+				console.log(i);
+				console.log(row);
+				var inputs = row.querySelectorAll('td > input');
+				if (inputs.length == 5){
+					reactionStr = inputs[0].value + inputs[1].value + inputs[2].value + ',' + inputs[3].value + ',' + inputs[4].value;
+					console.log(reactionStr);
+					reactionSet[i] = encodeURIComponent(reactionStr);
+				}
+			}
+			validateModel(reactionSet);
+			
+		}else{
+			console.log('table did not exist')
+		}
+		
+	};
+
+	validateModel = function(reactionSet){
+            console.log('validate model');
+            var csrftoken = getCookie('csrftoken');
+            xhr = new XMLHttpRequest();
+            xhr.open("POST", "/validate/");
+            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+            xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        console.log('successful model');
+			var response = JSON.parse(xhr.responseText);
+			var species = response["species"];
+			console.log(species);
+			populateInputs(species);
+                    } else {
+                        console.log('failed');
+                    }
+                }
+            }
+	    console.log(reactionSet);
+	    var jsonStr = JSON.stringify(reactionSet);
+	   console.log(jsonStr);
+            xhr.send("reactions="+jsonStr);		
+	};
+
+
+	populateInputs = function(species_list){
+		var scPanel = document.getElementById("single-calc-wrapper");
+		var entryForm = document.createElement("form");
+		for(var i = 0; i<species_list.length; i++){
+			var symbol = species_list[i];
+			var labeling = "species-" + symbol;
+
+			var entry = document.createElement("div");
+			entry.classList.add("form-group");
+
+			var label = document.createElement("label");
+			label.setAttribute("for",labeling);
+			label.textContent = symbol;
+
+			var inputBox = document.createElement("input");
+			inputBox.classList.add("form-control");
+			inputBox.id = labeling;
+			inputBox.setAttribute("placeholder", "Initial concentration");
+			inputBox.setAttribute("type", "text");
+			inputBox.setAttribute("size", "10");
+
+			entry.appendChild(label);
+			entry.appendChild(inputBox);
+
+			entryForm.appendChild(entry);
+		}
+		scPanel.appendChild(entryForm);
+	};
+	
+        
+        $("#model-selector a").click(function(e){
+            e.preventDefault();
+            var selectedModel = e.target.getAttribute("model");
+            console.log('selected ' + selectedModel);
+	    console.log(allModels);
+	    console.log('????');	
+            var currentModel = allModels["models"][selectedModel];
+     
+            //some mock json:
+            //var mockObj = {};
+            //var r1 = {"reactants":"A + B", "products":"C", "direction":"<--->", "kf":1.2, "kr":4.5};
+            //var r2 = {"reactants":"B + C", "products":"D", "direction":"<--->", "kf":3.6, "kr":1.5};
+            //mockObj["reactions"] = [r1,r2];
+            
+	console.log(currentModel);  
+	console.log('*******');
+          displayModel(currentModel);
+        });
+        
+        displayModel = function(obj){
+            var container = $("#model-table-wrapper");
+            container.empty();
+            var reactionList = obj["reactions"];
+            var modelTable = createModelTable();
+            
+            for(i in reactionList){
+                var rx = reactionList[i];
+                console.log(rx);
+                modelTable.appendChild(makeReactionv2(rx));
+            }
+            container.append(modelTable);
+        }
+        
+        createModelTable = function(){
+            var tbl = document.createElement("table");
+	    tbl.id = "model-table";
+            tbl.classList.add("table");
+            var thead = document.createElement("thead");
+            var tr = document.createElement("tr");
+            var columnNames = ["Reactants"," ","Products","kf","kr"];
+            for(i in columnNames){
+                var th = document.createElement("th");
+                th.textContent = columnNames[i];
+                tr.appendChild(th);
+            }
+            thead.appendChild(tr);
+            tbl.appendChild(thead);
+            return tbl;
+        }
+        
+        makeReactionv2 = function(x){
+            //maybe x could be null?
+            var wrapper = document.createElement("tr");
+            wrapper.classList.add("reaction-wrapper");
+            
+            var td1 = document.createElement("td");
+            var reactantInput = document.createElement("input");
+            reactantInput.setAttribute("type", "text");
+            reactantInput.value = x["reactants"];
+            td1.appendChild(reactantInput);
+            
+            var td2 = document.createElement("td");
+            var directionInput = document.createElement("input");
+            directionInput.setAttribute("type", "text");
+            directionInput.value = x["direction"];
+            td2.appendChild(directionInput);
+    
+            var td3 = document.createElement("td");
+            var productInput = document.createElement("input");
+            productInput.setAttribute("type", "text");
+            productInput.value = x["products"];
+            td3.appendChild(productInput);
+            
+            td4 = document.createElement("td");
+            var kfInput = document.createElement("input");
+            kfInput.setAttribute("type", "text");
+            kfInput.value = x["kf"];
+            td4.appendChild(kfInput);
+            
+            td5 = document.createElement("td");
+            var krInput = document.createElement("input");
+            krInput.setAttribute("type", "text");
+            krInput.value = x["kr"];
+            td5.appendChild(krInput);
+            
+            wrapper.appendChild(td1);
+            wrapper.appendChild(td2);
+            wrapper.appendChild(td3);
+            wrapper.appendChild(td4);
+            wrapper.appendChild(td5);
+            return wrapper;
+        };
+        
+        
+        retrieveModels = function(){
+            console.log('go getMODELS');
+            var csrftoken = getCookie('csrftoken');
+            xhr = new XMLHttpRequest();
+            xhr.open("POST", "/models/");
+            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+            xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        console.log('successful');
+                        var response = JSON.parse(xhr.responseText);
+			console.log(response);
+                        allModels = response;
+                    } else {
+                        console.log('failed');
+                    }
+                }
+            }
+	    xhr.send();
+        };
+        
+        $(document).ready(retrieveModels);
+        
+    </script>
+</html>

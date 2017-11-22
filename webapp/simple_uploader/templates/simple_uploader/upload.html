@@ -1,0 +1,52 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+	<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+	<!-- Optional theme -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+	<style>
+		#upload-panel{
+			margin-top:60px;
+		}
+	
+	</style>
+
+	</head>
+	<body>
+		<div class="container">
+			<div class="row">
+				<div class="col-md-6 col-md-offset-3">
+					<div id="upload-panel" class="panel panel-default">
+						<div class="panel-heading">Upload file
+						</div>
+						<div class="panel-body">
+							<form enctype="multipart/form-data" action="/upload/" method="post">
+								{% csrf_token %}
+								<div class="form-group">
+									<label for="id_file">File:</label>
+									<input type="file" name="file" required id="id_file" />
+								</div>
+								<input type="submit" value="Submit" />
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+			{% if result_link %}
+				<a href="{{result_link}}">Download results</a>
+			{% endif %}
+			{% if result_table %}
+				{{result_table|safe}}
+			{% endif %}
+			</div>
+		</div>
+	</body>
+	<!-- Latest compiled and minified JavaScript -->
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+</html>
