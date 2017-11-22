@@ -94,6 +94,7 @@ class FileReactionFactory(ReactionFactory):
     REACTION_DELIMITER = '#REACTIONS'
     IC_DELIMITER = '#INITIAL_CONDITIONS'
     TIME_DELIMITER = '#TIME'
+    REQUIRED_IC_DELIMITER = '#REQUIRED_INITIAL_CONDITIONS'
 
     def __init__(self, filepath):
         """
@@ -118,7 +119,7 @@ class FileReactionFactory(ReactionFactory):
         :return: None
         """
         contents = open(self.reaction_file).read()
-
+        print contents
         # parse out the reactions:
         reaction_section_pattern = '(?:%s)(.*)(?:%s)' % ((FileReactionFactory.REACTION_DELIMITER,)*2)
         m = re.search(reaction_section_pattern, contents, flags=re.DOTALL)
@@ -131,8 +132,27 @@ class FileReactionFactory(ReactionFactory):
             if len(reactions) == 0:
                 raise MalformattedReactionFileException('Could not parse any reactions from the input file.')
             self._reaction_list = reactions
+            
+            # for the other sections it's helpful to have a list of the species here
+            all_species_set = reduce(lambda x, y: x.union(y), [rx.get_all_species() for rx in self._reaction_list])
         else:
             raise MalformattedReactionFileException('Could not parse any reactions from the file. Check that.')
+
+        # parse out the minimum required initial conditions.  This is a comma-delimited set of species symbols on a single line.
+        # This simply defines which species are necessary for a sensible model.  
+        # The initial conditions section elsewhere in the file actually sets values on the initial conditions
+        required_ic_pattern = '(?:%s)(.*)(?:%s)' % ((FileReactionFactory.REQUIRED_IC_DELIMITER,)*2)
+        m = re.search(required_ic_pattern, contents, flags=re.DOTALL)
+        if m:
+            required_species_set = set([x.strip() for x in m.group(1).strip().split(',')])
+            # now check that those species are represented in the original reactions
+            if len(required_species_set.difference(all_species_set)) > 0:
+                raise RequiredSpeciesException('You specified a required initial condition that was not in the set of reactions.')
+            self._required_species_set = required_species_set
+        else:
+            raise MissingRequiredInitialConditionsException("""
+                    Could not parse any required initial conditions from the file. Without these,
+                    the system of reactions does not make sense.""")
 
         # parse out the initial conditions:
         ic_section_pattern = '(?:%s)(.*)(?:%s)' % ((FileReactionFactory.IC_DELIMITER,)*2)
@@ -153,6 +173,8 @@ class FileReactionFactory(ReactionFactory):
                         raise MalformattedReactionFileException("""
                             The initial condition for symbol %s is not valid""" %  symbol)
             if len(initial_conditions.keys()) > 0:
+                if len(set(initial_conditions.keys()).difference(all_species_set)) > 0:
+                    raise InitialConditionGivenForMissingElement('Initial condition was given for an element/species not in the set of reactions')
                 self._initial_conditions = initial_conditions
             else:
                 raise MissingInitialConditionsException("""
@@ -202,6 +224,15 @@ class FileReactionFactory(ReactionFactory):
         :return: a one-to-one dictionary of species symbols mapped to floats
         """
         return self._initial_conditions
+
+
+    def get_required_initial_conditions(self):
+        """
+        Return the set of species which are required to form a reaction (e.g. if any of these
+        are missing, then the reaction does not make sense or proceed).
+        """
+        return self._required_species_set
+
 
     def get_simulation_time(self):
         """

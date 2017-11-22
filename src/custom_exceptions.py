@@ -40,6 +40,10 @@ class MissingInitialConditionsException(Exception):
     pass
 
 
+class MissingRequiredInitialConditionsException(Exception):
+    pass
+
+
 class InvalidSimulationTimeException(Exception):
     pass
 
@@ -47,8 +51,13 @@ class InvalidSimulationTimeException(Exception):
 class InitialConditionGivenForMissingElement(Exception):
     pass
 
+
 class InvalidInitialConditionException(Exception):
     pass
+
+
+class RequiredSpeciesException(Exception):
+    pass	
 
 
 class ReactionErrorWithTrackerException(Exception):
