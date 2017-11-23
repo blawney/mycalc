@@ -75,19 +75,26 @@ def single_calc(request):
 	ic = request.POST.get('ic')
 	ic = json.loads(ic)
 	linked_model = os.path.join(CUSTOM_MODELS_DIR, request.session.get('modelfile', None))
+	print linked_model
+	print 'x'*20
 	result = process_single.process_single(ic, linked_model)
 	return JsonResponse({'result_html':result.to_frame().to_html(index_names=False, classes=['table','table-striped'])})
 
 
-def write_model(factory, user, all_species):
+def write_model(factory, user, all_species, required_initial_condition_csv):
 	#TODO use the user object to make a unique model file
-	filename = os.path.join(CUSTOM_MODELS_DIR, 'xyz.model')
+	username = user.username
+	filename = os.path.join(CUSTOM_MODELS_DIR, '%s.model' % username)
 	with open(filename, 'w') as fout:
 		fout.write('#REACTIONS\n')
 		for rx in factory.get_reactions():
 			fout.write(rx.as_string())
 			fout.write('\n')
 		fout.write('#REACTIONS\n')
+		fout.write('#REQUIRED_INITIAL_CONDITIONS\n')
+		fout.write(required_initial_condition_csv)
+		fout.write('\n')
+		fout.write('#REQUIRED_INITIAL_CONDITIONS\n')
 		fout.write('#INITIAL_CONDITIONS\n')
 		for s in all_species:
 			fout.write('%s=0.01\n' % s) # dummy value just to get file parser to validate
@@ -106,11 +113,14 @@ def validate_model(request):
 		print rx
 		print rx.get_all_species()
 		species_set = species_set.union(rx.get_all_species())
-	modelfile = write_model(rf, request.user, species_set)
 
-	print species_set
+	required_initial_condition_csv = request.POST.get('requiredIc')
+
+
+	modelfile = write_model(rf, request.user, species_set, required_initial_condition_csv)
+
 	return_obj = {}
-	return_obj['species'] = list(species_set)
+	return_obj['species'] = [x.strip() for x in required_initial_condition_csv.split(',')]
 	#return_obj['modelfile'] = modelfile
 	request.session['modelfile'] = modelfile
 	return JsonResponse(return_obj)

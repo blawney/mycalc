@@ -192,7 +192,15 @@
 					reactionSet[i] = encodeURIComponent(reactionStr);
 				}
 			}
-			validateModel(reactionSet);
+
+			//get the required initial conditions
+			var required_initial_conditions_input = $("#required_initial_conditions_input");
+			console.log(required_initial_conditions_input);
+			required_initial_conditions_csv = required_initial_conditions_input[0].value;
+			console.log(required_initial_conditions_csv);
+			required_initial_conditions_csv = encodeURIComponent(required_initial_conditions_csv);
+			console.log(required_initial_conditions_csv);
+			validateModel(reactionSet, required_initial_conditions_csv);
 			
 		}else{
 			console.log('table did not exist')
@@ -200,7 +208,7 @@
 		
 	};
 
-	validateModel = function(reactionSet){
+	validateModel = function(reactionSet, required_initial_conditions_csv){
             console.log('validate model');
             var csrftoken = getCookie('csrftoken');
             xhr = new XMLHttpRequest();
@@ -223,14 +231,19 @@
 	    console.log(reactionSet);
 	    var jsonStr = JSON.stringify(reactionSet);
 	   console.log(jsonStr);
-            xhr.send("reactions="+jsonStr);		
+            xhr.send("reactions="+jsonStr+"&requiredIc=" + required_initial_conditions_csv);
 	};
 
 
 	populateInputs = function(species_list){
 		var scPanel = document.getElementById("single-calc-wrapper");
+		while (scPanel.firstChild) {
+			scPanel.removeChild(scPanel.firstChild);
+		}
+		console.log(scPanel);
+		console.log('*****');
 		//var entryForm = document.createElement("form");
-		for(var i = 0; i<species_list.length; i++){
+		for(var i = 0; i < species_list.length; i++){
 			var symbol = species_list[i];
 			var labeling = "species-" + symbol;
 
@@ -332,9 +345,14 @@
             container.append(modelTable);
             
             // add in a csv string of required initial conditions:
+            var required_ic_label = document.createElement("label");
+            required_ic_label.textContent = "Required initial conditions";
+            required_ic_label.setAttribute("for","required_initial_conditions_input");	
             var required_ic_input = document.createElement("input");
             required_ic_input.setAttribute("type", "text");
+            required_ic_input.setAttribute("id", "required_initial_conditions_input");
             required_ic_input.value = obj["required_initial_conditions"];
+            container.append(required_ic_label);
             container.append(required_ic_input);
         }
         
