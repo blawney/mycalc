@@ -69,7 +69,7 @@ class Reaction(object):
         s = reactant_str +  direction + product_str
 	s += ',%s' % self._fwd_k
         if self._rev_k is not None:
-            s += ',%s' % self._fwd_k
+            s += ',%s' % self._rev_k
 	else:
             s += ',0'
 	return s
