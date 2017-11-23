@@ -45,6 +45,7 @@ def get_models(request):
 		this_model = {}
 		this_model['name'] = model_name
 		this_model['reactions'] = []
+		this_model['required_initial_conditions'] = ','.join(rf.get_required_initial_conditions())
 		for reaction in rf.get_reactions():
 			reactants = reaction.get_reactants()
 			products = reaction.get_products()

@@ -330,6 +330,12 @@
                 modelTable.appendChild(makeReactionv2(rx));
             }
             container.append(modelTable);
+            
+            // add in a csv string of required initial conditions:
+            var required_ic_input = document.createElement("input");
+            required_ic_input.setAttribute("type", "text");
+            required_ic_input.value = obj["required_initial_conditions"];
+            container.append(required_ic_input);
         }
         
         createModelTable = function(){
