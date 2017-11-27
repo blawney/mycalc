@@ -104,6 +104,9 @@ def write_model(factory, user, all_species, required_initial_condition_csv):
 @login_required
 def validate_model(request):
 	reactions = request.POST.get('reactions')
+	print 'Reactions:\n'
+	print reactions
+	print '*'*50
 	reactions = json.loads(reactions)
 	rf = reaction_factories.GUIReactionFactory(reactions)
 

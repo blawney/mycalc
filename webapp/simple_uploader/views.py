@@ -8,6 +8,7 @@ from django.conf import settings
 import datetime
 import os
 import glob
+import pandas as pd
 from google.cloud import storage
 import sys
 sys.path.append(settings.BACKEND_SRC)
@@ -28,7 +29,9 @@ def handle_file(f, modelfile):
 	with(open(uploaded_filepath, 'wb+')) as destination:
 		for chunk in f.chunks():
 			destination.write(chunk)
-	result = batch_process.process_batch(uploaded_filepath, modelfile)
+	input_df = pd.read_table(uploaded_filepath)
+	#result = batch_process.process_batch(uploaded_filepath, modelfile)
+	result = batch_process.process_batch(input_df, modelfile)
 	output_fn = now + '.csv'
 	output = os.path.join(settings.TEMP_DIR, output_fn)
 	result.to_csv(output, sep=',', index=False)

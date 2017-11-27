@@ -55,6 +55,7 @@
                                             </div>
                                         </div>
                                     </div>
+				    <!--
                                     <div class="panel panel-default">
                                         <div class="panel-heading">
                                             New model
@@ -64,6 +65,7 @@
                                             <span>New reaction</span>
                                         </div>
                                     </div>
+				    -->
                                 </div>
                             </div>
                         </div>
@@ -373,6 +375,14 @@
             return tbl;
         }
         
+	removeEquation = function(e){
+		var target = $( e.target );
+		console.log(target);
+		var parent_tr = target.closest("tr");
+		console.log(parent_tr);
+		parent_tr.remove();		
+	}
+
         makeReactionv2 = function(x){
             //maybe x could be null?
             var wrapper = document.createElement("tr");
@@ -396,23 +406,30 @@
             productInput.value = x["products"];
             td3.appendChild(productInput);
             
-            td4 = document.createElement("td");
+            var td4 = document.createElement("td");
             var kfInput = document.createElement("input");
             kfInput.setAttribute("type", "text");
             kfInput.value = x["kf"];
             td4.appendChild(kfInput);
             
-            td5 = document.createElement("td");
+            var td5 = document.createElement("td");
             var krInput = document.createElement("input");
             krInput.setAttribute("type", "text");
             krInput.value = x["kr"];
             td5.appendChild(krInput);
             
+            var td6 = document.createElement("td");
+	    var rmButton = document.createElement("button");
+	    rmButton.textContent = "x";
+	    rmButton.addEventListener("click", removeEquation);
+	    td6.appendChild(rmButton);
+
             wrapper.appendChild(td1);
             wrapper.appendChild(td2);
             wrapper.appendChild(td3);
             wrapper.appendChild(td4);
             wrapper.appendChild(td5);
+            wrapper.appendChild(td6);
             return wrapper;
         };
         
